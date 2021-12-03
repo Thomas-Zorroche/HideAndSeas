@@ -7,6 +7,21 @@
 #include "Components/BoxComponent.h" 
 #include "SDistribution.generated.h"
 
+USTRUCT()
+struct FActorToSpawnData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> Class;
+	
+	UPROPERTY(EditAnywhere)
+	int Count;
+	
+	UPROPERTY(EditAnywhere)
+	int MinDistance;
+};
+
 
 UCLASS()
 class PROTO_BOAT_API ASDistribution : public AActor
@@ -22,7 +37,7 @@ public:
 #endif
 	
 	UFUNCTION(CallInEditor, Category="SDistribution")
-	void UpdateCount();
+	void Update();
 
 protected:
 	// Called when the game starts or when spawned
@@ -31,6 +46,8 @@ protected:
 private:
 	virtual void Destroyed() override;
 
+	void SpawnActors(FActorToSpawnData ActorData);
+
 
 private:
 	UBoxComponent* Box;
@@ -38,17 +55,14 @@ private:
 	TArray<AActor*> ActorsInWorld;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<AActor> ActorToSpawn;
+	TArray< FActorToSpawnData > ActorsToSpawnData;
 	
-	UPROPERTY(EditAnywhere)
-	int Count = 5;
-
-	UPROPERTY(EditAnywhere)
-	float MinDistanceActors = 50.0f;
-
 	UPROPERTY(EditAnywhere)
 	FVector BoxSize;
 
 	UPROPERTY(EditAnywhere)
 	bool ZDistribution = false;
+
+	const int MAX_ITERATIONS = 100;
+	const int MIN_ITERATION_WARNING = 10; // DEBUG
 };

@@ -14,9 +14,7 @@ ASDistribution::ASDistribution()
 	RootComponent = Box;
 	BoxSize = Box->GetScaledBoxExtent();
 
-	UpdateCount();
-
-	UE_LOG(LogTemp, Warning, TEXT("RECOMPILE with %i components"), ActorsInWorld.Num());
+	Update();
 }
 
 void ASDistribution::Destroyed()
@@ -47,27 +45,26 @@ void ASDistribution::PostEditChangeProperty(FPropertyChangedEvent& e)
 	Super::PostEditChangeProperty(e);
 	
 	FName PropertyName = (e.Property != NULL) ? e.Property->GetFName() : NAME_None;
-	//UE_LOG(LogTemp, Warning, TEXT("Prop Changed: %s"), *PropertyName.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("Prop Changed: %s"), *PropertyName.ToString());
 	
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(ASDistribution, Count) || 
-		PropertyName == GET_MEMBER_NAME_CHECKED(ASDistribution, MinDistanceActors) ||
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(ASDistribution, ActorsToSpawnData) ||
+		PropertyName == GET_MEMBER_NAME_CHECKED(FActorToSpawnData, Count) ||
+		PropertyName == GET_MEMBER_NAME_CHECKED(FActorToSpawnData, MinDistance) ||
+		PropertyName == GET_MEMBER_NAME_CHECKED(FActorToSpawnData, Class) ||
 		PropertyName == "X" || PropertyName == "Y" || PropertyName == "Z" ||
 		PropertyName == GET_MEMBER_NAME_CHECKED(ASDistribution, BoxSize) || 
 		PropertyName == GET_MEMBER_NAME_CHECKED(ASDistribution, ZDistribution))
 	{
-		UpdateCount();
+		Update();
 	}
-
 }
 #endif
 
-void ASDistribution::UpdateCount()
+void ASDistribution::Update()
 {
-	if (!ActorToSpawn)
-	{
-		return;
-	}
-	
+	// Update Box Extent Scale
+	Box->SetBoxExtent(BoxSize);
+
 	// Destroy previous actors in the world
 	for (const auto& Actor : ActorsInWorld)
 	{
@@ -78,14 +75,27 @@ void ASDistribution::UpdateCount()
 	}
 	ActorsInWorld.Empty();
 
-	// Update Box Extent Scale
-	Box->SetBoxExtent(BoxSize);
 
-	for (size_t i = 0; i < Count; i++)
+	if (ActorsToSpawnData.Num() == 0)
+	{
+		return;
+	}
+
+	// For each class, spawn N Actors
+	for (const auto& ActorData : ActorsToSpawnData)
+	{
+		if (ActorData.Class)
+			SpawnActors(ActorData);
+	}
+}
+
+void ASDistribution::SpawnActors(FActorToSpawnData ActorData)
+{
+	int SpawnActorCount = 0;
+	for (size_t i = 0; i < ActorData.Count; i++)
 	{
 		auto SpawnLoc = FVector(0.0f, 0.0f, 0.0f);
 		bool SpawnLocationValid = true;
-		int MaxIterations = 100;
 		int CurrentIteration = 0;
 		do
 		{
@@ -100,7 +110,7 @@ void ASDistribution::UpdateCount()
 				else
 					Distance = FVector::DistSquared2D(Actor->GetActorLocation(), SpawnLoc);
 
-				if (abs(Distance) < MinDistanceActors * MinDistanceActors)
+				if (abs(Distance) < ActorData.MinDistance * ActorData.MinDistance)
 				{
 					SpawnLocationValid = false;
 					break;
@@ -108,9 +118,8 @@ void ASDistribution::UpdateCount()
 			}
 
 			CurrentIteration++;
-			if (CurrentIteration > MaxIterations)
+			if (CurrentIteration > MAX_ITERATIONS)
 			{
-				UE_LOG(LogTemp, Error, TEXT("Max iterations reached for ASDistribution::UpdateCount"));
 				break;
 			}
 
@@ -118,20 +127,34 @@ void ASDistribution::UpdateCount()
 
 		if (SpawnLocationValid)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Find Location with %i iters"), CurrentIteration);
+			if (CurrentIteration > MIN_ITERATION_WARNING)
+				UE_LOG(LogTemp, Warning, TEXT("Find Location with %i iters"), CurrentIteration);
 
 			if (!ZDistribution)
 			{
 				SpawnLoc.Z = GetActorLocation().Z;
 			}
 
-			// Create new component
-			AActor* Actor = GetWorld()->SpawnActor<AActor>(ActorToSpawn, SpawnLoc, GetActorRotation());
-			Actor->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
-
-			ActorsInWorld.Add(Actor);
+			// Create new Actor
+			AActor* Actor = GetWorld()->SpawnActor<AActor>(ActorData.Class, SpawnLoc, GetActorRotation());
+			if (Actor)
+			{
+				Actor->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
+				SpawnActorCount++;
+				ActorsInWorld.Add(Actor);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("Cannot spawn Actor!"));
+			}
 		}
 	}
+
+	if (SpawnActorCount != ActorData.Count)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Only %i Actors have been created but %i were asked!"), SpawnActorCount, ActorData.Count);
+	}
+
 }
 
 
