@@ -26,7 +26,7 @@ void ASDistribution::Destroyed()
 	Super::Destroy();
 
 	// Destroy previous actors in the world
-	for (const auto& Actor : ActorsInWorld)
+	for (auto& Actor : ActorsInWorld)
 	{
 		if (Actor)
 		{
