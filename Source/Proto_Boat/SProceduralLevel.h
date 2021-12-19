@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "SRoom.h"
 #include "SProceduralLevel.generated.h"
 
 
@@ -48,14 +47,10 @@ public:
 
 private:
 
-		TMap< RoomType, FRooms > Rooms;
-	
-	UPROPERTY(EditAnywhere)
-		FVector RoomSize;
-
-	UPROPERTY(EditAnyWhere)
-		float OffsetBetweenRoom;
+	TMap< RoomType, FRooms > Rooms;
+	UWorld* ProceduralWorld;
 
 	UPROPERTY(EditAnywhere)
-		UWorld* ProceduralWorld;
+	float OffsetBetweenRoom;
+
 };

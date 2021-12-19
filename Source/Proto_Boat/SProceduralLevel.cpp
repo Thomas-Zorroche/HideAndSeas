@@ -36,17 +36,20 @@ void ASProceduralLevel::BeginPlay()
             Rooms.Find(RoomType::START)->RoomsName.Add(streamingLevel->GetWorldAssetPackageName());
         else if (levelName.Contains(TEXT("End"))) 
             Rooms.Find(RoomType::END)->RoomsName.Add(streamingLevel->GetWorldAssetPackageName());
-        else if (levelName.Contains(TEXT("Lt"))) 
+        else if (levelName.Contains(TEXT("FtB")))
             Rooms.Find(RoomType::BACKTOFRONT)->RoomsName.Add(streamingLevel->GetWorldAssetPackageName());
-        else if (levelName.Contains(TEXT("Bt"))) 
+        else if (levelName.Contains(TEXT("LtR"))) 
             Rooms.Find(RoomType::RIGHTTOLEFT)->RoomsName.Add(streamingLevel->GetWorldAssetPackageName());
-        else if (levelName.Contains(TEXT("Lb"))) 
+        else if (levelName.Contains(TEXT("LtB")))
             Rooms.Find(RoomType::LEFTTOBACK)->RoomsName.Add(streamingLevel->GetWorldAssetPackageName());
+        else if (levelName.Contains(TEXT("FtR")))
+            Rooms.Find(RoomType::FRONTTORIGHT)->RoomsName.Add(streamingLevel->GetWorldAssetPackageName());
 
 
         UE_LOG(LogTemp, Warning, TEXT("LEVEL NAME : %s"), *levelName);
     }
 
+    // Load start level 
     if (Rooms.Find(RoomType::START)) {
         FString levelName = Rooms.Find(RoomType::START)->RoomsName[0];
         UE_LOG(LogTemp, Warning, TEXT("START LVL : %s"), *levelName);
