@@ -18,12 +18,12 @@ enum class RoomType : uint8
 	BACKTOFRONT	= 5		UMETA(DisplayName = "Back to Front"),
 };
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FRooms
 {
 	GENERATED_BODY()
-
-	TArray< FString > RoomsName;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray< ULevelStreaming* > Rooms;
 };
 
 
@@ -46,11 +46,32 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
+	UFUNCTION()
+	void OnCurrentLevelShown();
+	
 
-	TMap< RoomType, FRooms > Rooms;
-	UWorld* ProceduralWorld;
+	void CreateLevelAtPosition(ULevelStreaming* level, FTransform transform);
 
 	UPROPERTY(EditAnywhere)
 	float OffsetBetweenRoom;
+
+	UWorld* ProceduralWorld;
+
+protected :
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TMap< RoomType, FRooms > Rooms;
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void SortAllLevel();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ULevelStreaming* CurrentLevel;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FTransform NextSpawn;
+
+	UFUNCTION(BlueprintCallable)
+	FTransform GetExitTransform(ULevelStreaming* level);
 
 };
