@@ -72,17 +72,6 @@ FTransform ASProceduralLevel::GetExitTransform(ULevelStreaming* level){
     }
 }
 
-FTransform ASProceduralLevel::GetEntryTransform(ULevelStreaming* level) {
-    ASProceduralRoom* room = Cast<ASProceduralRoom>(level->GetLevelScriptActor());
-    if (room) {
-        return room->GetEntryTransform();
-    }
-    else {
-        UE_LOG(LogTemp, Warning, TEXT("Cannot get Entry Transform"));
-        return FTransform();
-    }
-}
-
 //void ASProceduralLevel::OnCurrentLevelShown() {
 //
 //    if (Rooms.Find(RoomType::RIGHTTOLEFT)) {

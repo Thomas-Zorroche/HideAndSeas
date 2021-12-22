@@ -22,16 +22,9 @@ public :
 			return FTransform();
 	}
 
-	FTransform GetEntryTransform() {
-		if (EntryTransform)
-			return EntryTransform->GetActorTransform();
-		else
-			return FTransform();
-	}
 
 private : 
-	UPROPERTY(EditAnywhere)
-	AActor* EntryTransform;
+
 	
 	UPROPERTY(EditAnywhere)
 	AActor* ExitTransform;
