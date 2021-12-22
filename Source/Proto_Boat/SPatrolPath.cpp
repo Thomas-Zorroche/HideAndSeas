@@ -111,8 +111,6 @@ void ASPatrolPath::Update()
 
 TArray<FVector> ASPatrolPath::GetMarkersLocation() const
 {
-	UE_LOG(LogTemp, Warning, TEXT("GET LOCATIONS"));
-
 	TArray<FVector> Locations;
 	for (auto Marker : Markers)
 	{

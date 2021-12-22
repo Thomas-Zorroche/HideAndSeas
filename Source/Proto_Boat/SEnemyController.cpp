@@ -6,6 +6,25 @@
 #include "Kismet/GameplayStatics.h" 
 
 
+ASEnemyController::ASEnemyController()
+{
+	AIPerception = GetAIPerceptionComponent();
+	AIPerception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerceptionComponent"));
+	SetPerceptionComponent(*AIPerception);
+	SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("Sight Config"));
+	
+	// Editor Variables
+	SightConfig->SightRadius = SightRadius;
+	SightConfig->LoseSightRadius = 2000.f;
+	SightConfig->PeripheralVisionAngleDegrees = SightAngle;
+	
+	SightConfig->DetectionByAffiliation.bDetectEnemies = true;
+	SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
+	SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
+	AIPerception->SetDominantSense(SightConfig->GetSenseImplementation());
+	AIPerception->ConfigureSense(*SightConfig);
+}
+
 // Called every frame
 void ASEnemyController::Tick(float DeltaTime)
 {
@@ -17,22 +36,39 @@ void ASEnemyController::Tick(float DeltaTime)
 		IncreaseAlertLevel(DeltaTime);
 }
 
-void ASEnemyController::SetPawn(APawn* InPawn)
+void ASEnemyController::OnPossess(APawn* InPawn)
 {
-	Super::SetPawn(InPawn);
+	Super::OnPossess(InPawn);
 	
 	if (!InPawn)
 		return;
 
 	auto ControlledPawn = Cast<ASEnemy>(GetPawn());
-	if (ControlledPawn)
+	if (ControlledPawn && AIPerception)
+	{
 		ControlledEnemy = ControlledPawn;
+		AIPerception->OnTargetPerceptionUpdated.AddDynamic(this, &ASEnemyController::ActorsPerceptionUpdated);
+	}
 	else
-		UE_LOG(LogTemp, Error, TEXT("Pawn must be a child class of ASEnemy!"));
+	{
+		if (!ControlledPawn)	
+			UE_LOG(LogTemp, Error, TEXT("Pawn must be a child class of ASEnemy!"));
+		if (!AIPerception)
+			UE_LOG(LogTemp, Error, TEXT("No AIPerception defined!"));
+	}
 }
 
-void ASEnemyController::OnPerceptionUpdated()
+void ASEnemyController::OnUnPossess()
 {
+	Super::OnUnPossess();
+	ControlledEnemy = nullptr;
+}
+
+void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
+{
+	// BUG : this is called two times when updated. It should be called only once!
+	UE_LOG(LogTemp, Warning, TEXT("IA UPDATE"));
+
 	switch (State)
 	{
 		case AIState::PATROL: SetAIState(AIState::ALERT); break;
@@ -71,7 +107,6 @@ void ASEnemyController::SetAIState(AIState NewState)
 		case AIState::ATTACK: ControlledEnemy->UpdateDebugStateLabel("ATTACK"); break;
 		}
 	}
-		
 }
 
 void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
@@ -82,7 +117,16 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 		return;
 	}
 
-	AlertLevel += AlertSpeed * DeltaTime;
+	auto PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	float DistanceToPlayer = 1.0f;
+	if (PlayerCharacter)
+	{
+		// DISTANCE ONLY IN XY
+		DistanceToPlayer = FVector::DistSquaredXY(GetPawn()->GetActorLocation(), PlayerCharacter->GetActorLocation());
+		DistanceToPlayer = FMath::Clamp(DistanceToPlayer, 0.0f, 1.0f);
+	}
+	
+	AlertLevel += AlertSpeed * DeltaTime * DistanceToPlayer;
 	AlertLevel = FMath::Clamp(AlertLevel, 0.0f, 1.0f);
 
 	if (ControlledEnemy)
