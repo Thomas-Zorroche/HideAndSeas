@@ -14,7 +14,7 @@ void ASEnemy::UpdateLightLevel(float AlertLevel)
 {
 	LightLevel = AlertLevel;
 	CurrentLightIntensity = BaseLightIntensity + LightLevel * (MaxLightIntensity - BaseLightIntensity);
-	OnLightLevelChanged(LightLevel);
+	OnLightLevelChanged(CurrentLightIntensity);
 }
 
 void ASEnemy::UpdateDebugStateLabel(const FString& Label)
@@ -28,6 +28,7 @@ void ASEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 	OnDebugStateLabelChanged(DebugStateLabel);
+	OnLightLevelChanged(CurrentLightIntensity);
 }
 
 // Called every frame
