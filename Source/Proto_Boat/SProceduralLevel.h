@@ -69,16 +69,14 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FTransform NextSpawn;
-
-	UFUNCTION(BlueprintCallable)
-	static FTransform GetEntryTransform(ULevelStreaming* level);
 	
 	UFUNCTION(BlueprintCallable)
 	static FTransform GetExitTransform(ULevelStreaming* level);
 
 	UFUNCTION(BlueprintCallable)
-	static RoomType GetRandomRoomType() {
-		return static_cast<RoomType>(FMath::RandRange(2, 5));
-	}
+	static RoomType GetRandomRoomType(RoomType previousRoomType);
+
+	UFUNCTION(BlueprintCallable)
+	static bool IsExitOnYAxis(RoomType roomType);
 
 };

@@ -72,6 +72,27 @@ FTransform ASProceduralLevel::GetExitTransform(ULevelStreaming* level){
     }
 }
 
+RoomType ASProceduralLevel::GetRandomRoomType(RoomType previousRoomType) {
+    TArray<RoomType> choice;
+
+    if (previousRoomType == RoomType::START || previousRoomType == RoomType::RIGHTTOLEFT || previousRoomType == RoomType::FRONTTORIGHT) {
+        choice.Add(RoomType::RIGHTTOLEFT);
+        choice.Add(RoomType::LEFTTOBACK);
+    }
+    else {
+        choice.Add(RoomType::BACKTOFRONT);
+        choice.Add(RoomType::FRONTTORIGHT);
+    }
+ 
+    return choice[FMath::RandRange(0, 1)];
+}
+
+bool ASProceduralLevel::IsExitOnYAxis(RoomType roomType) {
+    if (roomType == RoomType::RIGHTTOLEFT || roomType == RoomType::FRONTTORIGHT)
+        return true;
+    return false;
+}
+
 //void ASProceduralLevel::OnCurrentLevelShown() {
 //
 //    if (Rooms.Find(RoomType::RIGHTTOLEFT)) {
