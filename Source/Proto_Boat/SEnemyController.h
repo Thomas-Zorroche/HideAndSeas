@@ -62,10 +62,11 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float SightAngle = 60.0f;
 
-private:
 	// Value between 0.0 and 1.0. 1.0 being fully alerted --> Attack State
+	UPROPERTY(BlueprintReadOnly)
 	float AlertLevel = 0.0f;
 
+private:
 	// State of the enemy
 	AIState State = AIState::PATROL;
 

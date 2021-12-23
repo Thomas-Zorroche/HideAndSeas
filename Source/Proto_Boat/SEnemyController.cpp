@@ -123,10 +123,14 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 	{
 		// DISTANCE ONLY IN XY
 		DistanceToPlayer = FVector::DistSquaredXY(GetPawn()->GetActorLocation(), PlayerCharacter->GetActorLocation());
+		DistanceToPlayer = DistanceToPlayer / (SightRadius * SightRadius);
 		DistanceToPlayer = FMath::Clamp(DistanceToPlayer, 0.0f, 1.0f);
 	}
+
+	float DistanceFactor = FMath::Square(1.0f - DistanceToPlayer);
 	
-	AlertLevel += AlertSpeed * DeltaTime * DistanceToPlayer;
+	//UE_LOG(LogTemp, Warning, TEXT("Dst: %f"), (1.0f - DistanceToPlayer));
+	AlertLevel += AlertSpeed * DeltaTime * DistanceFactor;
 	AlertLevel = FMath::Clamp(AlertLevel, 0.0f, 1.0f);
 
 	if (ControlledEnemy)
