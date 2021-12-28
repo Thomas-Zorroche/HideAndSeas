@@ -35,10 +35,14 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "SEnemyController")
 	void LinkBehaviorTree();
 
-	//virtual void SetPawn(APawn* InPawn) override;
+	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
+	void OnLightLevelChanged(const float currentLightIntensity);
 
 	UFUNCTION(BlueprintCallable)
 	void ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
+	void OnDebugStateLabelChanged(const FString& debugStateLabel);
 
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
@@ -52,28 +56,33 @@ private:
 
 
 protected:
+	// ALERT
 	// Speed at which the enemy is alerted
 	UPROPERTY(EditAnywhere)
 	float AlertSpeed = 0.2f;
-
-	UPROPERTY(EditAnywhere)
-	float SightRadius = 1000.0f;
-
-	UPROPERTY(EditAnywhere)
-	float SightAngle = 60.0f;
-
 	// Value between 0.0 and 1.0. 1.0 being fully alerted --> Attack State
 	UPROPERTY(BlueprintReadOnly)
 	float AlertLevel = 0.0f;
+	
+	// AI PERCEPTION
+	UPROPERTY(EditAnywhere)
+	float SightRadius = 1000.0f;
+	UPROPERTY(EditAnywhere)
+	float SightAngle = 60.0f;
 
-private:
+	// SPOT LIGHT
+	UPROPERTY(EditAnywhere)
+	float BaseLightIntensity = 500.0f;
+	UPROPERTY(EditAnywhere)
+	float MaxLightIntensity = 5000.0f;
+
 	// State of the enemy
 	AIState State = AIState::PATROL;
 
-	// Controlled Enemy
-	ASEnemy* ControlledEnemy;
-
+private:
 	UAIPerceptionComponent* AIPerception;
-
 	UAISenseConfig_Sight* SightConfig;
+
+	float CurrentLightIntensity = BaseLightIntensity;
+	FString DebugStateLabel = "PATROL";
 };

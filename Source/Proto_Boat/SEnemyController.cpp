@@ -3,6 +3,7 @@
 
 #include "SEnemyController.h"
 #include "BehaviorTree/BlackboardComponent.h" 
+#include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h" 
 
 
@@ -43,32 +44,19 @@ void ASEnemyController::OnPossess(APawn* InPawn)
 	if (!InPawn)
 		return;
 
-	auto ControlledPawn = Cast<ASEnemy>(GetPawn());
-	if (ControlledPawn && AIPerception)
-	{
-		ControlledEnemy = ControlledPawn;
+	if (AIPerception)
 		AIPerception->OnTargetPerceptionUpdated.AddDynamic(this, &ASEnemyController::ActorsPerceptionUpdated);
-	}
 	else
-	{
-		if (!ControlledPawn)	
-			UE_LOG(LogTemp, Error, TEXT("Pawn must be a child class of ASEnemy!"));
-		if (!AIPerception)
-			UE_LOG(LogTemp, Error, TEXT("No AIPerception defined!"));
-	}
+		UE_LOG(LogTemp, Error, TEXT("No AIPerception defined!"));
 }
 
 void ASEnemyController::OnUnPossess()
 {
 	Super::OnUnPossess();
-	ControlledEnemy = nullptr;
 }
 
 void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
-	// BUG : this is called two times when updated. It should be called only once!
-	UE_LOG(LogTemp, Warning, TEXT("IA UPDATE"));
-
 	switch (State)
 	{
 		case AIState::PATROL: SetAIState(AIState::ALERT); break;
@@ -97,16 +85,15 @@ void ASEnemyController::SetAIState(AIState NewState)
 	if (Blackboard)
 		Blackboard->SetValueAsEnum("State", static_cast<uint8>(State));
 
-	if (ControlledEnemy)
+	switch (State)
 	{
-		switch (State)
-		{
-		case AIState::PATROL: ControlledEnemy->UpdateDebugStateLabel("PATROL"); break;
-		case AIState::SEARCH: ControlledEnemy->UpdateDebugStateLabel("SEARCH"); break;
-		case AIState::ALERT:  ControlledEnemy->UpdateDebugStateLabel("ALERT"); break;
-		case AIState::ATTACK: ControlledEnemy->UpdateDebugStateLabel("ATTACK"); break;
-		}
+	case AIState::PATROL: DebugStateLabel = "PATROL"; break;
+	case AIState::SEARCH: DebugStateLabel = "SEARCH"; break;
+	case AIState::ALERT:  DebugStateLabel = "ALERT"; break;
+	case AIState::ATTACK: DebugStateLabel = "ATTACK"; break;
 	}
+
+	OnDebugStateLabelChanged(DebugStateLabel);
 }
 
 void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
@@ -133,8 +120,8 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 	AlertLevel += AlertSpeed * DeltaTime * DistanceFactor;
 	AlertLevel = FMath::Clamp(AlertLevel, 0.0f, 1.0f);
 
-	if (ControlledEnemy)
-		ControlledEnemy->UpdateLightLevel(AlertLevel);
+	// Update Light Level
+	CurrentLightIntensity = BaseLightIntensity + AlertLevel * (MaxLightIntensity - BaseLightIntensity);
 }
 
 void ASEnemyController::DecreaseAlertLevel(float DeltaTime)
@@ -145,6 +132,6 @@ void ASEnemyController::DecreaseAlertLevel(float DeltaTime)
 	AlertLevel -= AlertSpeed * DeltaTime;
 	AlertLevel = FMath::Clamp(AlertLevel, 0.0f, 1.0f);
 
-	if (ControlledEnemy)
-		ControlledEnemy->UpdateLightLevel(AlertLevel);
+	// Update Light Level
+	CurrentLightIntensity = BaseLightIntensity + AlertLevel * (MaxLightIntensity - BaseLightIntensity);
 }
