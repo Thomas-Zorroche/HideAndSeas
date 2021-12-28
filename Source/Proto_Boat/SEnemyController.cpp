@@ -48,11 +48,14 @@ void ASEnemyController::OnPossess(APawn* InPawn)
 		AIPerception->OnTargetPerceptionUpdated.AddDynamic(this, &ASEnemyController::ActorsPerceptionUpdated);
 	else
 		UE_LOG(LogTemp, Error, TEXT("No AIPerception defined!"));
+	
+	OnLightLevelChanged(CurrentLightIntensity);
 }
 
 void ASEnemyController::OnUnPossess()
 {
 	Super::OnUnPossess();
+
 }
 
 void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
@@ -122,6 +125,8 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 
 	// Update Light Level
 	CurrentLightIntensity = BaseLightIntensity + AlertLevel * (MaxLightIntensity - BaseLightIntensity);
+
+	OnLightLevelChanged(CurrentLightIntensity);
 }
 
 void ASEnemyController::DecreaseAlertLevel(float DeltaTime)
@@ -134,4 +139,6 @@ void ASEnemyController::DecreaseAlertLevel(float DeltaTime)
 
 	// Update Light Level
 	CurrentLightIntensity = BaseLightIntensity + AlertLevel * (MaxLightIntensity - BaseLightIntensity);
+	
+	OnLightLevelChanged(CurrentLightIntensity);
 }
