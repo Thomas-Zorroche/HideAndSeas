@@ -7,8 +7,7 @@
 // Sets default values
 ASDistribution::ASDistribution()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	Box = CreateDefaultSubobject<UBoxComponent>("BoxCollision");
 	RootComponent = Box;
