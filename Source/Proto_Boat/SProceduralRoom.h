@@ -22,7 +22,10 @@ public :
 			return FTransform();
 	}
 
+
 private : 
+
+	
 	UPROPERTY(EditAnywhere)
 	AActor* ExitTransform;
 

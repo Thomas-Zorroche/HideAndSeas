@@ -15,7 +15,7 @@ enum class RoomType : uint8
 	LEFTTOBACK = 2		UMETA(DisplayName = "Left to Back"),
 	FRONTTORIGHT = 3	UMETA(DisplayName = "Front to Right"),
 	RIGHTTOLEFT = 4		UMETA(DisplayName = "Right to Left"),
-	BACKTOFRONT	= 5		UMETA(DisplayName = "Back to Front"),
+	BACKTOFRONT = 5		UMETA(DisplayName = "Back to Front"),
 };
 
 USTRUCT(BlueprintType)
@@ -46,11 +46,10 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
-	UFUNCTION()
-	void OnCurrentLevelShown();
-	
+	//UFUNCTION()
+	//void OnCurrentLevelShown();
 
-	void CreateLevelAtPosition(ULevelStreaming* level, FTransform transform);
+	//void CreateLevelAtPosition(ULevelStreaming* level, FTransform transform);
 
 	UPROPERTY(EditAnywhere)
 	float OffsetBetweenRoom;
@@ -70,8 +69,14 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FTransform NextSpawn;
+	
+	UFUNCTION(BlueprintCallable)
+	static FTransform GetExitTransform(ULevelStreaming* level);
 
 	UFUNCTION(BlueprintCallable)
-	FTransform GetExitTransform(ULevelStreaming* level);
+	static RoomType GetRandomRoomType(RoomType previousRoomType);
+
+	UFUNCTION(BlueprintCallable)
+	static bool IsExitOnYAxis(RoomType roomType);
 
 };

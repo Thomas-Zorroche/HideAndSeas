@@ -52,32 +52,6 @@ void ASProceduralLevel::BeginPlay()
 {
 	Super::BeginPlay();
 
-
-
-    // Load start level 
-    //if (Rooms.Find(RoomType::START)) {
-    //    ULevelStreaming* level = Rooms.Find(RoomType::START)->Rooms[0];
-
-    //    CreateLevelAtPosition(level, FTransform());
-
-    //    CurrentLevel = level;
-    //    level->OnLevelShown.AddDynamic(this, &ASProceduralLevel::OnCurrentLevelShown);
-
-        //auto levelActor = ProceduralWorld->GetLevelScriptActor(level->GetLoadedLevel());
-        //auto levelRoom = Cast<ASProceduralRoom>(levelActor);
-
-        ////auto script = level->GetLevelScriptActor();
-        //if (levelRoom) {
-        //    UE_LOG(LogTemp, Warning, TEXT("omg"));
-        //}
-        //else
-        //{
-        //    UE_LOG(LogTemp, Warning, TEXT("ptn"));
-        //}
-
-        //UGameplayStatics::LoadStreamLevel(this, *levelName, true, true, FLatentActionInfo());
-    //}
-
 }
 
 // Called every frame
@@ -89,30 +63,48 @@ void ASProceduralLevel::Tick(float DeltaTime)
 
 FTransform ASProceduralLevel::GetExitTransform(ULevelStreaming* level){
     ASProceduralRoom* room = Cast<ASProceduralRoom>(level->GetLevelScriptActor());
-
     if (room) {
-        UE_LOG(LogTemp, Warning, TEXT("Cast succeed"));
         return room->GetExitTransform();
     }
     else {
-        UE_LOG(LogTemp, Warning, TEXT("Cast failed"));
+        UE_LOG(LogTemp, Warning, TEXT("Cannot get Exit Transform"));
         return FTransform();
     }
-
 }
 
-void ASProceduralLevel::OnCurrentLevelShown() {
+RoomType ASProceduralLevel::GetRandomRoomType(RoomType previousRoomType) {
+    TArray<RoomType> choice;
 
-    if (Rooms.Find(RoomType::RIGHTTOLEFT)) {
-        ULevelStreaming* level = Rooms.Find(RoomType::RIGHTTOLEFT)->Rooms[0];
-
-        CreateLevelAtPosition(level, NextSpawn);
+    if (previousRoomType == RoomType::START || previousRoomType == RoomType::RIGHTTOLEFT || previousRoomType == RoomType::FRONTTORIGHT) {
+        choice.Add(RoomType::RIGHTTOLEFT);
+        choice.Add(RoomType::LEFTTOBACK);
     }
+    else {
+        choice.Add(RoomType::BACKTOFRONT);
+        choice.Add(RoomType::FRONTTORIGHT);
+    }
+ 
+    return choice[FMath::RandRange(0, 1)];
 }
 
-void ASProceduralLevel::CreateLevelAtPosition(ULevelStreaming* level, FTransform transform) {
-    level->CreateInstance(TEXT("SecondLevel"));
-    level->LevelTransform = transform;
-    level->SetShouldBeLoaded(true);
-    level->SetShouldBeVisible(true);
+bool ASProceduralLevel::IsExitOnYAxis(RoomType roomType) {
+    if (roomType == RoomType::RIGHTTOLEFT || roomType == RoomType::FRONTTORIGHT)
+        return true;
+    return false;
 }
+
+//void ASProceduralLevel::OnCurrentLevelShown() {
+//
+//    if (Rooms.Find(RoomType::RIGHTTOLEFT)) {
+//        ULevelStreaming* level = Rooms.Find(RoomType::RIGHTTOLEFT)->Rooms[0];
+//
+//        CreateLevelAtPosition(level, NextSpawn);
+//    }
+//}
+
+//void ASProceduralLevel::CreateLevelAtPosition(ULevelStreaming* level, FTransform transform) {
+//    level->CreateInstance(TEXT("SecondLevel"));
+//    level->LevelTransform = transform;
+//    level->SetShouldBeLoaded(true);
+//    level->SetShouldBeVisible(true);
+//}
