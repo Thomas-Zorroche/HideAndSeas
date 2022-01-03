@@ -48,9 +48,9 @@ void ASEnemyController::OnPossess(APawn* InPawn)
 	{
 		AISightComp = SightInterface->GetAISightComp();
 
-		SightConfig->SightRadius = AISightComp->Radius;
+		SightConfig->SightRadius = AISightComp->SightRadius;
 		SightConfig->LoseSightRadius = 2000.f;
-		SightConfig->PeripheralVisionAngleDegrees = AISightComp->Angle;
+		SightConfig->PeripheralVisionAngleDegrees = AISightComp->SightAngle;
 	}
 
 	if (AIPerception)
@@ -123,7 +123,7 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 		// DISTANCE ONLY IN XY
 		DistanceToPlayer = FVector::DistSquaredXY(GetPawn()->GetActorLocation(), PlayerCharacter->GetActorLocation());
 		if (IsValid(AISightComp))
-			DistanceToPlayer = DistanceToPlayer / (AISightComp->Radius * AISightComp->Radius);
+			DistanceToPlayer = DistanceToPlayer / (AISightComp->SightRadius * AISightComp->SightRadius);
 		DistanceToPlayer = FMath::Clamp(DistanceToPlayer, 0.0f, 1.0f);
 	}
 
