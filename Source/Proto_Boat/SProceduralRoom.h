@@ -18,15 +18,19 @@ public :
 	FTransform GetExitTransform() {
 		if (ExitTransform)
 			return ExitTransform->GetActorTransform();
-		else
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("ExitTransform is not defined in Level Blueprint"));
 			return FTransform();
+		}
 	}
 
 
 private : 
-
 	
 	UPROPERTY(EditAnywhere)
 	AActor* ExitTransform;
+
+protected :
+	bool IsCompleted = false;
 
 };
