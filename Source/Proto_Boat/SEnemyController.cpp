@@ -56,13 +56,13 @@ void ASEnemyController::OnPossess(APawn* InPawn)
 void ASEnemyController::OnUnPossess()
 {
 	Super::OnUnPossess();
-
 }
 
 void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
 	ASTopDownCharacter* player = nullptr;
 	player = Cast<ASTopDownCharacter>(Actor);
+
 	switch (State)
 	{
 		case AIState::PATROL:
@@ -109,7 +109,7 @@ void ASEnemyController::SetAIState(AIState NewState)
 }
 
 void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
-{ // TODO: handle the increasing when the player is invisible in front of the AI
+{
 	if (AlertLevel == 1.0f)
 	{
 		SetAIState(AIState::ATTACK);
@@ -118,32 +118,34 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 
 	auto PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	float DistanceToPlayer = 1.0f;
+
+	// If the player is invisible in front of the AI in alert mode
 	ASTopDownCharacter* player = nullptr;
 	if (PlayerCharacter)
 		player = Cast<ASTopDownCharacter>(PlayerCharacter);
-	//if (player != NULL && player->isVisible) {
-		if (PlayerCharacter)
-			{
-				// DISTANCE ONLY IN XY
-				DistanceToPlayer = FVector::DistSquaredXY(GetPawn()->GetActorLocation(), PlayerCharacter->GetActorLocation());
-				DistanceToPlayer = DistanceToPlayer / (SightRadius * SightRadius);
-				DistanceToPlayer = FMath::Clamp(DistanceToPlayer, 0.0f, 1.0f);
-			}
+	if (player != NULL && !player->isVisible) {
+		SetAIState(AIState::SEARCH);
+		return;
+	}
 
-			float DistanceFactor = FMath::Square(1.0f - DistanceToPlayer);
+	if (PlayerCharacter)
+	{
+		// DISTANCE ONLY IN XY
+		DistanceToPlayer = FVector::DistSquaredXY(GetPawn()->GetActorLocation(), PlayerCharacter->GetActorLocation());
+		DistanceToPlayer = DistanceToPlayer / (SightRadius * SightRadius);
+		DistanceToPlayer = FMath::Clamp(DistanceToPlayer, 0.0f, 1.0f);
+	}
+
+	float DistanceFactor = FMath::Square(1.0f - DistanceToPlayer);
 	
-			//UE_LOG(LogTemp, Warning, TEXT("Dst: %f"), (1.0f - DistanceToPlayer));
-			AlertLevel += AlertSpeed * DeltaTime * DistanceFactor;
-			AlertLevel = FMath::Clamp(AlertLevel, 0.0f, 1.0f);
+	//UE_LOG(LogTemp, Warning, TEXT("Dst: %f"), (1.0f - DistanceToPlayer));
+	AlertLevel += AlertSpeed * DeltaTime * DistanceFactor;
+	AlertLevel = FMath::Clamp(AlertLevel, 0.0f, 1.0f);
 
-			// Update Light Level
-			CurrentLightIntensity = BaseLightIntensity + AlertLevel * (MaxLightIntensity - BaseLightIntensity);
+	// Update Light Level
+	CurrentLightIntensity = BaseLightIntensity + AlertLevel * (MaxLightIntensity - BaseLightIntensity);
 
-			OnLightLevelChanged(CurrentLightIntensity);
-	//}
-	//else
-		//DecreaseAlertLevel(DeltaTime);
-	
+	OnLightLevelChanged(CurrentLightIntensity);
 }
 
 void ASEnemyController::DecreaseAlertLevel(float DeltaTime)
