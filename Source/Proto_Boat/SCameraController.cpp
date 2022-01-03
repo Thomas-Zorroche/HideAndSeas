@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "SAISightComp.h"
 #include "SCameraController.h"
+#include "Components/SEnemyComponent.h"
 
 ASCameraController::ASCameraController()
 {
@@ -19,9 +19,9 @@ void ASCameraController::UpdateDirection(float DeltaTime)
 {
 	if (State == AIState::PATROL)
 	{
-		CurrentAngle += (DeltaTime * AISightComp->Speed) * Sign;
+		CurrentAngle += (DeltaTime * EnemyComp->Speed) * Sign;
 
-		if (FMath::Abs(CurrentAngle) > AISightComp->CameraPatrolAngle)
+		if (FMath::Abs(CurrentAngle) > EnemyComp->CameraPatrolAngle)
 			Sign *= -1.0f;
 
 		CurrentDirection = OriginDirection.RotateAngleAxis(CurrentAngle, FVector(0.0f, 0.0f, 1.0f));

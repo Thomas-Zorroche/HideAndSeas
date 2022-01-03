@@ -6,7 +6,7 @@
 // Add default functionality here for any IIsEnemy functions that are not pure virtual.
 
 
-class USAISightComp* IIsEnemy::GetAISightComp()
+class USEnemyComponent* IIsEnemy::GetEnemyComp()
 {
 	return NULL;
 }

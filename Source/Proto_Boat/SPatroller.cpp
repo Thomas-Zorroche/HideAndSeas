@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SPatroller.h"
-#include "SAISightComp.h"
+#include "Components/SEnemyComponent.h"
 
 // Sets default values
 ASPatroller::ASPatroller()
@@ -9,7 +9,7 @@ ASPatroller::ASPatroller()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	AISightComp = CreateDefaultSubobject<USAISightComp>("AISightComp");
+	EnemyComp = CreateDefaultSubobject<USEnemyComponent>("EnemyComponent");
 }
 
 // Called when the game starts or when spawned
@@ -33,9 +33,9 @@ void ASPatroller::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 }
 
-USAISightComp* ASPatroller::GetAISightComp()
+USEnemyComponent* ASPatroller::GetEnemyComp()
 {
-	return AISightComp;
+	return EnemyComp;
 }
 
 

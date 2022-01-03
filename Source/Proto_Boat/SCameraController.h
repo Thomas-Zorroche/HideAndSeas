@@ -34,12 +34,6 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	float CurrentAngle;
 
-	//UPROPERTY(EditAnywhere)
-	//float RotationSpeed; // TODO REMOVE
-
-	//UPROPERTY(EditAnywhere)
-	//float AngleMax; // TODO REMOVE
-
 private:
 	float Sign = 1.0f;
 };

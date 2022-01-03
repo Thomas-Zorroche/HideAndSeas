@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SCamera.h"
-#include "SAISightComp.h"
+#include "Components/SEnemyComponent.h"
 
 // Sets default values
 ASCamera::ASCamera()
@@ -9,7 +9,7 @@ ASCamera::ASCamera()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	AISightComp = CreateDefaultSubobject<USAISightComp>("AISightComp");
+	EnemyComp = CreateDefaultSubobject<USEnemyComponent>("EnemyComponent");
 }
 
 // Called when the game starts or when spawned
@@ -33,8 +33,8 @@ void ASCamera::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
-USAISightComp* ASCamera::GetAISightComp()
+USEnemyComponent* ASCamera::GetEnemyComp()
 {
-	return AISightComp;
+	return EnemyComp;
 }
 

@@ -5,7 +5,7 @@
 #include "BehaviorTree/BlackboardComponent.h" 
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h" 
-#include "SAISightComp.h"
+#include "Components/SEnemyComponent.h"
 #include "IsEnemy.h"
 
 
@@ -22,7 +22,7 @@ ASEnemyController::ASEnemyController()
 	AIPerception->SetDominantSense(SightConfig->GetSenseImplementation());
 	AIPerception->ConfigureSense(*SightConfig);
 
-	AISightComp = nullptr;
+	EnemyComp = nullptr;
 }
 
 // Called every frame
@@ -46,11 +46,11 @@ void ASEnemyController::OnPossess(APawn* InPawn)
 	IIsEnemy* SightInterface = Cast<IIsEnemy>(InPawn);
 	if (SightInterface)
 	{
-		AISightComp = SightInterface->GetAISightComp();
+		EnemyComp = SightInterface->GetEnemyComp();
 
-		SightConfig->SightRadius = AISightComp->SightRadius;
+		SightConfig->SightRadius = EnemyComp->SightRadius;
 		SightConfig->LoseSightRadius = 2000.f;
-		SightConfig->PeripheralVisionAngleDegrees = AISightComp->SightAngle;
+		SightConfig->PeripheralVisionAngleDegrees = EnemyComp->SightAngle;
 	}
 
 	if (AIPerception)
@@ -122,15 +122,15 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 	{
 		// DISTANCE ONLY IN XY
 		DistanceToPlayer = FVector::DistSquaredXY(GetPawn()->GetActorLocation(), PlayerCharacter->GetActorLocation());
-		if (IsValid(AISightComp))
-			DistanceToPlayer = DistanceToPlayer / (AISightComp->SightRadius * AISightComp->SightRadius);
+		if (IsValid(EnemyComp))
+			DistanceToPlayer = DistanceToPlayer / (EnemyComp->SightRadius * EnemyComp->SightRadius);
 		DistanceToPlayer = FMath::Clamp(DistanceToPlayer, 0.0f, 1.0f);
 	}
 
 	float DistanceFactor = FMath::Square(1.0f - DistanceToPlayer);
 	
-	if (IsValid(AISightComp))
-		AlertLevel += AISightComp->AlertSpeed * DeltaTime * DistanceFactor;
+	if (IsValid(EnemyComp))
+		AlertLevel += EnemyComp->AlertSpeed * DeltaTime * DistanceFactor;
 	AlertLevel = FMath::Clamp(AlertLevel, 0.0f, 1.0f);
 
 	// Update Light Level
@@ -144,8 +144,8 @@ void ASEnemyController::DecreaseAlertLevel(float DeltaTime)
 	if (AlertLevel == 0.0f)
 		return;
 	
-	if (IsValid(AISightComp))
-		AlertLevel -= AISightComp->AlertSpeed * DeltaTime;
+	if (IsValid(EnemyComp))
+		AlertLevel -= EnemyComp->AlertSpeed * DeltaTime;
 	AlertLevel = FMath::Clamp(AlertLevel, 0.0f, 1.0f);
 
 	// Update Light Level

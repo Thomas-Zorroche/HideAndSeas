@@ -27,9 +27,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	virtual class USAISightComp* GetAISightComp() override;
+	virtual class USEnemyComponent* GetEnemyComp() override;
 
 public:
 	UPROPERTY(VisibleAnywhere)
-	class USAISightComp* AISightComp;
+	class USEnemyComponent* EnemyComp;
 };

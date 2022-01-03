@@ -4,17 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "SAISightComp.generated.h"
+#include "SEnemyComponent.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class PROTO_BOAT_API USAISightComp : public UActorComponent
+class PROTO_BOAT_API USEnemyComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
-	USAISightComp();
+	USEnemyComponent();
 
 protected:
 	// Called when the game starts
@@ -39,12 +39,12 @@ public:
 
 	// Enemy's speed (Angular speed for cameras)
 	UPROPERTY(EditAnywhere)
-	float Speed = 4.0f;
-	
+	float Speed = 10.0f;
+
 	// How far the enemy can spot the player
 	UPROPERTY(EditAnywhere)
 	float SightRadius = 1000.0f;
-	
+
 	// Field of view of the enemy
 	UPROPERTY(EditAnywhere)
 	float SightAngle = 60.0f;
@@ -52,4 +52,5 @@ public:
 	// Patrol angle for cameras. Ignored if the pawn is not a Camera.
 	UPROPERTY(EditAnywhere)
 	float CameraPatrolAngle = 60.0f;
+		
 };

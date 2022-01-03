@@ -58,7 +58,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	float AlertLevel = 0.0f;
 
-	class USAISightComp* AISightComp;
+	class USEnemyComponent* EnemyComp;
 
 	// SPOT LIGHT - TEMP
 	UPROPERTY(EditAnywhere)
