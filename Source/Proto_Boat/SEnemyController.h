@@ -53,23 +53,14 @@ private:
 	void IncreaseAlertLevel(float DeltaTime);
 	void DecreaseAlertLevel(float DeltaTime);
 
-
 protected:
-	// ALERT
-	// Speed at which the enemy is alerted
-	UPROPERTY(EditAnywhere)
-	float AlertSpeed = 0.2f;
 	// Value between 0.0 and 1.0. 1.0 being fully alerted --> Attack State
 	UPROPERTY(BlueprintReadOnly)
 	float AlertLevel = 0.0f;
-	
-	// AI PERCEPTION
-	UPROPERTY(EditAnywhere)
-	float SightRadius = 1000.0f;
-	UPROPERTY(EditAnywhere)
-	float SightAngle = 60.0f;
 
-	// SPOT LIGHT
+	class USEnemyComponent* EnemyComp;
+
+	// SPOT LIGHT - TEMP
 	UPROPERTY(EditAnywhere)
 	float BaseLightIntensity = 500.0f;
 	UPROPERTY(EditAnywhere)

@@ -5,6 +5,8 @@
 #include "BehaviorTree/BlackboardComponent.h" 
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h" 
+#include "Components/SEnemyComponent.h"
+#include "IsEnemy.h"
 
 
 ASEnemyController::ASEnemyController()
@@ -14,16 +16,13 @@ ASEnemyController::ASEnemyController()
 	SetPerceptionComponent(*AIPerception);
 	SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("Sight Config"));
 	
-	// Editor Variables
-	SightConfig->SightRadius = SightRadius;
-	SightConfig->LoseSightRadius = 2000.f;
-	SightConfig->PeripheralVisionAngleDegrees = SightAngle;
-	
 	SightConfig->DetectionByAffiliation.bDetectEnemies = true;
 	SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
 	SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
 	AIPerception->SetDominantSense(SightConfig->GetSenseImplementation());
 	AIPerception->ConfigureSense(*SightConfig);
+
+	EnemyComp = nullptr;
 }
 
 // Called every frame
@@ -43,6 +42,16 @@ void ASEnemyController::OnPossess(APawn* InPawn)
 	
 	if (!InPawn)
 		return;
+
+	IIsEnemy* SightInterface = Cast<IIsEnemy>(InPawn);
+	if (SightInterface)
+	{
+		EnemyComp = SightInterface->GetEnemyComp();
+
+		SightConfig->SightRadius = EnemyComp->SightRadius;
+		SightConfig->LoseSightRadius = 2000.f;
+		SightConfig->PeripheralVisionAngleDegrees = EnemyComp->SightAngle;
+	}
 
 	if (AIPerception)
 		AIPerception->OnTargetPerceptionUpdated.AddDynamic(this, &ASEnemyController::ActorsPerceptionUpdated);
@@ -113,14 +122,15 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 	{
 		// DISTANCE ONLY IN XY
 		DistanceToPlayer = FVector::DistSquaredXY(GetPawn()->GetActorLocation(), PlayerCharacter->GetActorLocation());
-		DistanceToPlayer = DistanceToPlayer / (SightRadius * SightRadius);
+		if (IsValid(EnemyComp))
+			DistanceToPlayer = DistanceToPlayer / (EnemyComp->SightRadius * EnemyComp->SightRadius);
 		DistanceToPlayer = FMath::Clamp(DistanceToPlayer, 0.0f, 1.0f);
 	}
 
 	float DistanceFactor = FMath::Square(1.0f - DistanceToPlayer);
 	
-	//UE_LOG(LogTemp, Warning, TEXT("Dst: %f"), (1.0f - DistanceToPlayer));
-	AlertLevel += AlertSpeed * DeltaTime * DistanceFactor;
+	if (IsValid(EnemyComp))
+		AlertLevel += EnemyComp->AlertSpeed * DeltaTime * DistanceFactor;
 	AlertLevel = FMath::Clamp(AlertLevel, 0.0f, 1.0f);
 
 	// Update Light Level
@@ -133,8 +143,9 @@ void ASEnemyController::DecreaseAlertLevel(float DeltaTime)
 {
 	if (AlertLevel == 0.0f)
 		return;
-
-	AlertLevel -= AlertSpeed * DeltaTime;
+	
+	if (IsValid(EnemyComp))
+		AlertLevel -= EnemyComp->AlertSpeed * DeltaTime;
 	AlertLevel = FMath::Clamp(AlertLevel, 0.0f, 1.0f);
 
 	// Update Light Level
