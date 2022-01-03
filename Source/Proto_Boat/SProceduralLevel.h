@@ -27,6 +27,30 @@ struct FRooms
 };
 
 
+USTRUCT(BlueprintType)
+struct FRoomData
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName LevelName;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool Completed;
+
+};
+
+
+USTRUCT(BlueprintType)
+struct FIsland
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FTransform position;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FRoomData> LevelData;
+
+};
 
 UCLASS()
 class PROTO_BOAT_API ASProceduralLevel : public AActor
@@ -78,5 +102,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	static bool IsExitOnYAxis(RoomType roomType);
+
+
 
 };
