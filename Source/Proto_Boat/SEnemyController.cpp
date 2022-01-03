@@ -2,6 +2,7 @@
 
 
 #include "SEnemyController.h"
+#include "STopDownCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h" 
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h" 
@@ -64,17 +65,25 @@ void ASEnemyController::OnPossess(APawn* InPawn)
 void ASEnemyController::OnUnPossess()
 {
 	Super::OnUnPossess();
-
 }
 
 void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
+	ASTopDownCharacter* player = nullptr;
+	player = Cast<ASTopDownCharacter>(Actor);
+
 	switch (State)
 	{
-		case AIState::PATROL: SetAIState(AIState::ALERT); break;
-		case AIState::SEARCH: SetAIState(AIState::ALERT); break;
-		case AIState::ALERT:  SetAIState(AIState::SEARCH); break;
-		case AIState::ATTACK: break;
+		case AIState::PATROL:
+			if (player != NULL && player->isVisible)
+				SetAIState(AIState::ALERT);
+			break;
+		case AIState::SEARCH:
+			if (player != NULL && player->isVisible)
+				SetAIState(AIState::ALERT);
+			break;
+		case AIState::ALERT:	SetAIState(AIState::SEARCH); break;
+		case AIState::ATTACK:	break;
 	}
 }
 
@@ -118,6 +127,16 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 
 	auto PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	float DistanceToPlayer = 1.0f;
+
+	// If the player is invisible in front of the AI in alert mode
+	ASTopDownCharacter* player = nullptr;
+	if (PlayerCharacter)
+		player = Cast<ASTopDownCharacter>(PlayerCharacter);
+	if (player != NULL && !player->isVisible) {
+		SetAIState(AIState::SEARCH);
+		return;
+	}
+
 	if (PlayerCharacter)
 	{
 		// DISTANCE ONLY IN XY
