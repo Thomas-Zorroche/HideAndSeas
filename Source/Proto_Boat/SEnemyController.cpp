@@ -172,3 +172,7 @@ void ASEnemyController::DecreaseAlertLevel(float DeltaTime)
 	
 	OnLightLevelChanged(CurrentLightIntensity);
 }
+
+void ASEnemyController::SetAlertLevel(const float NewAlertLevel) {
+	AlertLevel = NewAlertLevel;
+}

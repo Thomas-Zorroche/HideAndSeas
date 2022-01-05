@@ -43,6 +43,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
 	void OnDebugStateLabelChanged(const FString& debugStateLabel);
 
+	UFUNCTION(BlueprintCallable)
+	void SetAlertLevel(const float NewAlertLevel);
+
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 
