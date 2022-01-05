@@ -2,22 +2,24 @@
 
 #pragma once
 
+#include "./Utility.h"
+
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "SProceduralLevel.generated.h"
 
 
-UENUM(BlueprintType)
-enum class RoomType : uint8
-{
-	START = 0			UMETA(DisplayName = "Start"),
-	END = 1				UMETA(DisplayName = "End"),
-	LEFTTOBACK = 2		UMETA(DisplayName = "Left to Back"),
-	FRONTTORIGHT = 3	UMETA(DisplayName = "Front to Right"),
-	RIGHTTOLEFT = 4		UMETA(DisplayName = "Right to Left"),
-	BACKTOFRONT = 5		UMETA(DisplayName = "Back to Front"),
-};
-
+//UENUM(BlueprintType)
+//enum class RoomType : uint8
+//{
+//	START = 0			UMETA(DisplayName = "Start"),
+//	END = 1				UMETA(DisplayName = "End"),
+//	LEFTTOBACK = 2		UMETA(DisplayName = "Left to Back"),
+//	FRONTTORIGHT = 3	UMETA(DisplayName = "Front to Right"),
+//	RIGHTTOLEFT = 4		UMETA(DisplayName = "Right to Left"),
+//	BACKTOFRONT = 5		UMETA(DisplayName = "Back to Front"),
+//};
+//
 USTRUCT(BlueprintType)
 struct FRooms
 {
