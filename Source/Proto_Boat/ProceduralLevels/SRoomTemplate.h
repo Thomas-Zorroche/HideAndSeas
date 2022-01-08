@@ -27,4 +27,6 @@ private :
 	BiomeType GetBiomeType ();
 	RoomType GetRoomType ();
 	int GetId ();
+
+	TArray<FString> getTabName();
 };

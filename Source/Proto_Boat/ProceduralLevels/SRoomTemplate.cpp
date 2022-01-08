@@ -5,35 +5,36 @@
 
 BiomeType USRoomTemplate::GetBiomeType()
 {
-    if (SubLevelName.ToString().Contains(TEXT("Forest")))
+    TArray<FString> tabName = getTabName();
+    check(tabName.Num() > 3);
+    FString biomeTypeString = tabName[0];
+
+    if (biomeTypeString == "Forest")
         return BiomeType::FOREST;
-    else if (SubLevelName.ToString().Contains(TEXT("Village")))
+    else if (biomeTypeString == "Village")
         return BiomeType::VILLAGE;
-    else if (SubLevelName.ToString().Contains(TEXT("Castle")))
+    else if (biomeTypeString == "Castle")
         return BiomeType::CASTLE;
     UE_LOG(LogTemp, Error, TEXT("Did not find Biome Type"));
     return BiomeType::MAX;
 }
 
 RoomType USRoomTemplate::GetRoomType() {
-    /*TArray<FString> tabName;
-    check(tabName.Num() > 2);
-    switch (tabName[1])
-    {
-    default:
-        break;
-    }*/
-    if (SubLevelName.ToString().Contains(TEXT("Start")))
+    TArray<FString> tabName= getTabName();
+    check(tabName.Num() > 3);
+    FString roomTypeString = tabName[2];
+
+    if (roomTypeString == "Start")
        return RoomType::START;
-    else if (SubLevelName.ToString().Contains(TEXT("End")))
+    else if (roomTypeString == "End")
         return RoomType::END;
-    else if (SubLevelName.ToString().Contains(TEXT("FtB")))
+    else if (roomTypeString == "FtB")
         return RoomType::BACKTOFRONT;
-    else if (SubLevelName.ToString().Contains(TEXT("LtR")))
+    else if (roomTypeString == "LtR")
         return RoomType::RIGHTTOLEFT;
-    else if (SubLevelName.ToString().Contains(TEXT("LtB")))
+    else if (roomTypeString == "LtB")
         return RoomType::LEFTTOBACK;
-    else if (SubLevelName.ToString().Contains(TEXT("FtR")))
+    else if (roomTypeString == "FtR")
         return RoomType::FRONTTORIGHT;
     UE_LOG(LogTemp, Error, TEXT("Did not find Room Type"));
     return RoomType::MAX;
@@ -41,14 +42,15 @@ RoomType USRoomTemplate::GetRoomType() {
 
 int USRoomTemplate::GetId()
 {
-    TArray<FString> tabName;
+    TArray<FString> tabName= getTabName();
     check(tabName.Num()>3);
     return FCString::Atoi(*tabName[2]);
 }
 
-TArray<FString> getTabName(FName name) {
+TArray<FString> USRoomTemplate:: getTabName() {
     TArray<FString> parsed;
-    name.ToString().ParseIntoArray(parsed, TEXT("_"), false);
+    SubLevelName.ToString().ParseIntoArray(parsed, TEXT("_"), false);
     // Parsed now contains ["BiomeType", "RoomType", "id",]
+    check(parsed.Num() > 3);
     return parsed;
 }
