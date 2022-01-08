@@ -3,7 +3,7 @@
 
 #include "./SRoomTemplate.h"
 
-BiomeType USRoomTemplate::GetBiomeType()
+BiomeType FSRoomTemplate::GetBiomeType()
 {
     TArray<FString> tabName = getTabName();
     check(tabName.Num() > 3);
@@ -19,7 +19,7 @@ BiomeType USRoomTemplate::GetBiomeType()
     return BiomeType::MAX;
 }
 
-RoomType USRoomTemplate::GetRoomType() {
+RoomType FSRoomTemplate::GetRoomType() {
     TArray<FString> tabName= getTabName();
     check(tabName.Num() > 3);
     FString roomTypeString = tabName[2];
@@ -40,14 +40,14 @@ RoomType USRoomTemplate::GetRoomType() {
     return RoomType::MAX;
 }
 
-int USRoomTemplate::GetId()
+int FSRoomTemplate::GetId()
 {
-    TArray<FString> tabName= getTabName();
+    TArray<FString> tabName = getTabName();
     check(tabName.Num()>3);
     return FCString::Atoi(*tabName[2]);
 }
 
-TArray<FString> USRoomTemplate:: getTabName() {
+TArray<FString> FSRoomTemplate::getTabName() {
     TArray<FString> parsed;
     SubLevelName.ToString().ParseIntoArray(parsed, TEXT("_"), false);
     // Parsed now contains ["BiomeType", "RoomType", "id",]

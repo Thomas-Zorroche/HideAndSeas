@@ -2,27 +2,49 @@
 
 
 #include "./GameManager.h"
+#include "./SProceduralRoom.h"
+#include "Runtime/Engine/Classes/Engine/LevelStreaming.h"
+#include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 
-// Sets default values
-AGameManager::AGameManager()
-{
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
+UGameManager::UGameManager() {
+	StreamingLevels = {};
+	PoolOfRoom = {};
+	Islands = {};
 }
 
-// Called when the game starts or when spawned
-void AGameManager::BeginPlay()
-{
-	Super::BeginPlay();
-	
-	// [TO DO] Generate PoolOfRoom 
+void UGameManager::GetStreamingLevels() {
+	const TArray<ULevelStreaming*>& streamedLevels = GetWorld()->GetStreamingLevels();
+	for (ULevelStreaming* streamingLevel : streamedLevels) {
+		FString levelName = streamingLevel->GetWorldAssetPackageName();
+		UE_LOG(LogTemp, Warning, TEXT("****** LEVEL NAME : %s"), *levelName);
+
+		streamingLevel->SetShouldBeLoaded(true);
+		streamingLevel->SetShouldBeVisible(true);
+		StreamingLevels.Add(streamingLevel);
+		//ASProceduralRoom* room = Cast<ASProceduralRoom>(streamingLevel->GetLevelScriptActor());
+
+	}
 }
 
-// Called every frame
-void AGameManager::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
+bool UGameManager::AreLevelsShowned() {
+	if (PoolInitialized)
+		return false;
+	for (ULevelStreaming* streamingLevel : StreamingLevels) {
+		if (!streamingLevel->IsLevelVisible())
+			return false;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("levels shown"));
+	return true;
 }
 
+void UGameManager::InitializeRoomsPool() {
+	for (ULevelStreaming* streamingLevel : StreamingLevels) {
+		ASProceduralRoom* room = Cast<ASProceduralRoom>(streamingLevel->GetLevelScriptActor());
+		if (room) {
+			FSRoomTemplate roomTemplate(streamingLevel->GetWorldAssetPackageFName(), room->GetExitTransform().GetLocation());
+			PoolOfRoom.Add(roomTemplate);
+		}
+		UE_LOG(LogTemp, Warning, TEXT("room template"));
+	}
+	PoolInitialized = true;
+}

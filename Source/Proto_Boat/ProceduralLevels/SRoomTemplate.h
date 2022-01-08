@@ -14,13 +14,19 @@
 /**
  * 
  */
-UCLASS()
-class PROTO_BOAT_API USRoomTemplate : public UObject
+USTRUCT(BlueprintType)
+struct FSRoomTemplate
 {
 	GENERATED_BODY()
-private :
+public:
+	FSRoomTemplate() {};
+	FSRoomTemplate(FName _SubLevelName, FVector _ExitPosition) : SubLevelName(_SubLevelName), ExitPosition(_ExitPosition){};
+
+//private :
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName SubLevelName;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector ExitPosition;
 	FVector EntryPosition;
 

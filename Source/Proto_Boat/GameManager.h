@@ -5,30 +5,35 @@
 #include "./ProceduralLevels/SRoomTemplate.h"
 #include "./ProceduralLevels/SIslandLevel.h"
 
+#include "Runtime/Engine/Classes/Engine/LevelStreaming.h"
+
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Engine/GameInstance.h"
 #include "GameManager.generated.h"
 
 UCLASS()
-class PROTO_BOAT_API AGameManager : public AActor
+class PROTO_BOAT_API UGameManager : public UGameInstance
 {
 	GENERATED_BODY()
+public:
+	UGameManager();
+	UFUNCTION(BlueprintCallable, Category = "Custom")
+	void GetStreamingLevels();
+
+	UFUNCTION(BlueprintCallable, Category = "Custom")
+	bool AreLevelsShowned();
+
+	UFUNCTION(BlueprintCallable, Category = "Custom")
+	void InitializeRoomsPool();
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	TArray<FSRoomTemplate> PoolOfRoom;
+	UPROPERTY(EditAnywhere)
+	TArray<USIslandLevel*> Islands;
+
+	TArray< ULevelStreaming* > StreamingLevels;
 
 private:
-	UPROPERTY(EditAnywhere)
-	TArray<USRoomTemplate*> PoolOfRoom;
-	TArray<USIslandLevel*> Islands;
+	bool PoolInitialized = false;
 	
-public:	
-	// Sets default values for this actor's properties
-	AGameManager();
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
 };
