@@ -6,7 +6,10 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "Misc/AssertionMacros.h"
+#include "Kismet/KismetStringLibrary.h"
 #include "SRoomTemplate.generated.h"
+
 
 /**
  * 
@@ -21,7 +24,7 @@ private :
 	FVector ExitPosition;
 	FVector EntryPosition;
 
-	BiomeType GetBiomeType = BiomeType::FOREST;
-	RoomType GetRoomType = RoomType::START;
-	int GetId = 0;
+	BiomeType GetBiomeType ();
+	RoomType GetRoomType ();
+	int GetId ();
 };
