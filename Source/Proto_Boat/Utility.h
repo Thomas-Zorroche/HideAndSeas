@@ -9,6 +9,9 @@
  * 
  */
 
+
+// TODO move this in other file
+
 UENUM(BlueprintType)
 enum class RoomType : uint8
 {

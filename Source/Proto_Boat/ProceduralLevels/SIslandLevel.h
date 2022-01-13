@@ -16,10 +16,15 @@ UCLASS()
 class PROTO_BOAT_API USIslandLevel : public UObject
 {
 	GENERATED_BODY()
+
+public:
+	FVector GetWorldPosition() const { return WorldPosition; }
+
 private :
 	TArray<USRoomInLevel> Rooms;
 	FVector WorldPosition;
 
 	BiomeType Biome;
-	bool IsFinished;
+	bool IsFinished = false;
+	bool IsMaritim;
 };

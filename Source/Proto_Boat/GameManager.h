@@ -28,10 +28,25 @@ public:
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite)
 	TArray<FSRoomTemplate> PoolOfRoom;
+
+	// TODO remove pointers
 	UPROPERTY(EditAnywhere)
 	TArray<USIslandLevel*> Islands;
 
 	TArray< ULevelStreaming* > StreamingLevels;
+
+	const TArray<USIslandLevel*>& GetIslandLevels() const { return Islands; }
+	bool HasIslandLevels() const { return Islands.Num() > 0; }
+
+
+	// Return index
+	//int AddIslandLevel(FVector, biome, isMaritime);
+
+
+	void GenerateIslands(TArray<FVector> IslandLocations)
+	{
+		
+	}
 
 private:
 	bool PoolInitialized = false;
