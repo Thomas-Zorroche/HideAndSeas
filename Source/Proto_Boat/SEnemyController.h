@@ -46,12 +46,18 @@ public:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 
+protected:
+	UFUNCTION(BlueprintCallable)
+	void OnEnemyComponentChanged();
+
 private:
 	UFUNCTION(BlueprintCallable)
 	void SetAIState(AIState NewState);
 
 	void IncreaseAlertLevel(float DeltaTime);
 	void DecreaseAlertLevel(float DeltaTime);
+
+	void UpdateSightConfig();
 
 protected:
 	// Value between 0.0 and 1.0. 1.0 being fully alerted --> Attack State

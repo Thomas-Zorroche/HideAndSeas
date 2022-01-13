@@ -30,6 +30,6 @@ public:
 	virtual class USEnemyComponent* GetEnemyComp() override;
 
 public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class USEnemyComponent* EnemyComp;
 };
