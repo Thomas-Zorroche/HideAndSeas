@@ -42,11 +42,15 @@ public:
 	float Speed = 10.0f;
 
 	// How far the enemy can spot the player
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float SightRadius = 500.0f;
+
+	// Maximum sight distance to see target that has been already seen.
 	UPROPERTY(EditAnywhere)
-	float SightRadius = 1000.0f;
+	float LoseSightRadius = 500.0f;
 
 	// Field of view of the enemy
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float SightAngle = 60.0f;
 
 	// Patrol angle for cameras. Ignored if the pawn is not a Camera.

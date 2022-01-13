@@ -2,6 +2,7 @@
 
 
 #include "SPatrolPath.h"
+#include "Components/SEnemyComponent.h"
 
 
 const int ASPatrolPath::MARKERS_COUNT_MAX = 10;
@@ -13,6 +14,8 @@ ASPatrolPath::ASPatrolPath()
 	PrimaryActorTick.bCanEverTick = true;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>("SceneComponent");
+
+	EnemyComp = CreateDefaultSubobject<USEnemyComponent>("EnemyComponent");
 }
 
 // Called when the game starts or when spawned

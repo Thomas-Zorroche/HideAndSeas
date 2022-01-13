@@ -13,5 +13,5 @@ UCLASS()
 class PROTO_BOAT_API ASPatrollerController : public ASEnemyController
 {
 	GENERATED_BODY()
-	
+
 };
