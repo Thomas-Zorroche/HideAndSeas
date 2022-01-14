@@ -13,11 +13,12 @@
  * 
  */
 UCLASS()
-class PROTO_BOAT_API USIslandLevel : public UObject
+class USIslandLevel : public UObject
 {
 	GENERATED_BODY()
 
 public:
+	void Init(FVector worldPosition, BiomeType biome, bool isMaritime);
 	FVector GetWorldPosition() const { return WorldPosition; }
 
 private :
@@ -26,5 +27,7 @@ private :
 
 	BiomeType Biome;
 	bool IsFinished = false;
-	bool IsMaritim;
+	bool IsMaritime;
+
+	static int const LEVELSIZE = 6;
 };

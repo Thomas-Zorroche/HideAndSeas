@@ -13,9 +13,10 @@ UCLASS()
 class PROTO_BOAT_API USRoomInLevel : public UObject
 {
 	GENERATED_BODY()
-private:
+public:
+	// Index in GameManager PoolOfRoom, corresponding to the RoomTemplate to spawn
 	int PoolIndex;
 
 	FVector WorldPosition;
-	bool IsFinished;
+	bool IsFinished = false;
 };

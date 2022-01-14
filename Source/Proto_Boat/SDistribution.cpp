@@ -124,8 +124,8 @@ void ASDistribution::GenerateAllActors(TArray<FVector>& IslandLocations)
 	{
 		if (ActorData.Class)
 		{
-			auto Island = Cast<ASIsland>(ActorData.Class);
-			if (Island)
+			auto IsIsland = (ActorData.Class == IslandClass);
+			if (IsIsland)
 				IslandLocations = SpawnActorsRandomly(ActorData);
 			else
 				SpawnActorsRandomly(ActorData);
@@ -133,7 +133,7 @@ void ASDistribution::GenerateAllActors(TArray<FVector>& IslandLocations)
 	}
 }
 
-void ASDistribution::GenerateIslands(const TArray<USIslandLevel*>& IslandLevels)
+void ASDistribution::GenerateIslands(const TArray<USIslandLevel *>& IslandLevels)
 {
 	for (auto Island : IslandLevels)
 	{

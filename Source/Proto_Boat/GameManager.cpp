@@ -21,8 +21,6 @@ void UGameManager::GetStreamingLevels() {
 		streamingLevel->SetShouldBeLoaded(true);
 		streamingLevel->SetShouldBeVisible(true);
 		StreamingLevels.Add(streamingLevel);
-		//ASProceduralRoom* room = Cast<ASProceduralRoom>(streamingLevel->GetLevelScriptActor());
-
 	}
 }
 
@@ -47,4 +45,20 @@ void UGameManager::InitializeRoomsPool() {
 		UE_LOG(LogTemp, Warning, TEXT("room template"));
 	}
 	PoolInitialized = true;
+}
+
+void UGameManager::GenerateIslands(TArray<FVector> IslandLocations, bool IsMaritime) {
+
+	for (auto location : IslandLocations) {
+		auto level = NewObject<USIslandLevel>();
+		level->Init(location, GetRandomBiomeType(), IsMaritime);
+		Islands.Add(level);
+	}
+
+}
+
+
+// Find Random room from pool room that is roomtype and biometype, return the index in the PoolOfRooms
+int UGameManager::GetRandomRoom(RoomType roomType, BiomeType biome) {
+	return 0;
 }

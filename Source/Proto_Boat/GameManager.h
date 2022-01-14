@@ -26,27 +26,32 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Custom")
 	void InitializeRoomsPool();
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	UPROPERTY(EditAnywhere,BlueprintReadOnly)
 	TArray<FSRoomTemplate> PoolOfRoom;
 
 	// TODO remove pointers
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<USIslandLevel*> Islands;
 
 	TArray< ULevelStreaming* > StreamingLevels;
 
 	const TArray<USIslandLevel*>& GetIslandLevels() const { return Islands; }
+	
+	UFUNCTION(BlueprintCallable, Category = "Custom")
 	bool HasIslandLevels() const { return Islands.Num() > 0; }
 
 
 	// Return index
 	//int AddIslandLevel(FVector, biome, isMaritime);
 
-
-	void GenerateIslands(TArray<FVector> IslandLocations)
-	{
-		
+	static BiomeType GetRandomBiomeType() {
+		return  static_cast<BiomeType>(FMath::RandRange(0, (int)BiomeType::MAX - 1));
 	}
+
+	UFUNCTION(BlueprintCallable, Category = "Custom")
+	void GenerateIslands(TArray<FVector> IslandLocations, bool IsMaritime);
+
+	static int GetRandomRoom(RoomType roomType, BiomeType biome);
 
 private:
 	bool PoolInitialized = false;
