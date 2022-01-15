@@ -23,6 +23,7 @@ void ASCameraController::UpdateDirection(float DeltaTime)
 
 		if (FMath::Abs(CurrentAngle) > EnemyComp->CameraPatrolAngle)
 		{
+			CurrentAngle = EnemyComp->CameraPatrolAngle * Sign;
 			Sign *= -1.0f;
 			PawnFixe = true;
 			OnReachMaxAngle();
