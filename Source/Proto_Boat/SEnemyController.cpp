@@ -209,7 +209,7 @@ void ASEnemyController::UpdateSightConfig()
 	auto ConfigSight = Cast<UAISenseConfig_Sight>(Config);
 
 	ConfigSight->SightRadius = EnemyComp->SightRadius;
-	ConfigSight->LoseSightRadius = EnemyComp->LoseSightRadius;
+	ConfigSight->LoseSightRadius = EnemyComp->SightRadius;
 	ConfigSight->PeripheralVisionAngleDegrees = EnemyComp->SightAngle;
 
 	AIPerception->RequestStimuliListenerUpdate();

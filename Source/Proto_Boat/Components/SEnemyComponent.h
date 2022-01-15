@@ -45,10 +45,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float SightRadius = 500.0f;
 
-	// Maximum sight distance to see target that has been already seen.
-	UPROPERTY(EditAnywhere)
-	float LoseSightRadius = 500.0f;
-
 	// Field of view of the enemy
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float SightAngle = 60.0f;
