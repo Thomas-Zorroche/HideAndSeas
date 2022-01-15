@@ -43,6 +43,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
 	void OnDebugStateLabelChanged(const FString& debugStateLabel);
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
+	void OnAttack();
+
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 
@@ -58,6 +61,10 @@ private:
 	void DecreaseAlertLevel(float DeltaTime);
 
 	void UpdateSightConfig();
+
+public:
+	UPROPERTY(BlueprintReadWrite)
+	bool PawnFixe = false;
 
 protected:
 	// Value between 0.0 and 1.0. 1.0 being fully alerted --> Attack State

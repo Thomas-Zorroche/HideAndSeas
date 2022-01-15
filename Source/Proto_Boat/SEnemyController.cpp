@@ -118,6 +118,8 @@ void ASEnemyController::SetAIState(AIState NewState)
 		auto PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 		if (Blackboard && PlayerController)
 			Blackboard->SetValueAsObject("TargetActor", PlayerController);
+
+		OnAttack();
 	}
 
 	// Set State to Blackboard
