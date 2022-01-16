@@ -50,8 +50,8 @@ void UGameManager::InitializeRoomsPool() {
 void UGameManager::GenerateIslands(TArray<FVector> IslandLocations, bool IsMaritime) {
 
 	for (auto location : IslandLocations) {
-		auto level = NewObject<USIslandLevel>();
-		level->Init(location, GetRandomBiomeType(), IsMaritime);
+		auto level = FIslandLevel(location, GetRandomBiomeType(), IsMaritime) ;
+		InitializeIslandLevel(level);
 		Islands.Add(level);
 	}
 
@@ -60,5 +60,55 @@ void UGameManager::GenerateIslands(TArray<FVector> IslandLocations, bool IsMarit
 
 // Find Random room from pool room that is roomtype and biometype, return the index in the PoolOfRooms
 int UGameManager::GetRandomRoom(RoomType roomType, BiomeType biome) {
-	return 0;
+	TArray<int> FilteredPool = FilterByBiomeAndType(biome, roomType);
+	if (FilteredPool.Num() == 0) {
+		UE_LOG(LogTemp, Warning, TEXT("Filtered Pool is Empty : there is no room with this type and this biome"));
+		return -1;
+	}
+
+	return FilteredPool[FMath::RandRange(0, FilteredPool.Num()-1)];
+}
+
+TArray<int> UGameManager::FilterByBiomeAndType(BiomeType biome, RoomType roomType) const{
+	TArray<int> indices = {};
+	for (int i = 0; i < PoolOfRoom.Num(); i++) {
+		auto biomtype = PoolOfRoom[i].GetBiomeType();
+		auto roomtype = PoolOfRoom[i].GetRoomType();
+		if (biomtype == biome && roomtype == roomType)
+			indices.Add(i);
+	}
+
+	return indices;
+}
+
+void UGameManager::InitializeIslandLevel(FIslandLevel& level) {
+	// Generate Level (Rooms)
+	FVector nextLocation = FVector(0.0f);
+	int i = 0;
+
+	// Create Start room
+	int id = GetRandomRoom(RoomType::START, level.Biome);
+ 	level.Rooms.Add(FRoomInLevel(id, nextLocation));
+
+	nextLocation += PoolOfRoom[level.Rooms[i].PoolIndex].ExitPosition;
+	RoomType previousRoomType = RoomType::START;
+	i++;
+
+	// In between Rooms
+	for (; i < 6 - 1; i++) {
+		previousRoomType = GetRandomRoomType(previousRoomType);
+		level.Rooms.Add(FRoomInLevel(GetRandomRoom(previousRoomType, level.Biome), nextLocation));
+		nextLocation += PoolOfRoom[level.Rooms[i].PoolIndex].ExitPosition;
+	}
+
+	// Create n-1 room
+	previousRoomType = IsExitOnYAxis(previousRoomType) ? RoomType::LEFTTOBACK : RoomType::BACKTOFRONT;
+	level.Rooms.Add(FRoomInLevel(GetRandomRoom(previousRoomType, level.Biome), nextLocation));
+	nextLocation += PoolOfRoom[level.Rooms[i].PoolIndex].ExitPosition;
+
+	i++;
+
+	// Create End Room
+	level.Rooms.Add(FRoomInLevel(GetRandomRoom(RoomType::END, level.Biome), nextLocation));
+
 }

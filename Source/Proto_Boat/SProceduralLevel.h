@@ -99,11 +99,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	static FTransform GetExitTransform(ULevelStreaming* level);
 
-	UFUNCTION(BlueprintCallable)
-	static RoomType GetRandomRoomType(RoomType previousRoomType);
+	//UFUNCTION(BlueprintCallable)
+	//static RoomType GetRandomRoomType(RoomType previousRoomType);
 
-	UFUNCTION(BlueprintCallable)
-	static bool IsExitOnYAxis(RoomType roomType);
+	//UFUNCTION(BlueprintCallable)
+	//static bool IsExitOnYAxis(RoomType roomType);
 
 
 

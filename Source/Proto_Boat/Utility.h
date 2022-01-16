@@ -32,3 +32,24 @@ enum class BiomeType : uint8
 	CASTLE = 2			UMETA(DisplayName = "Castle"),
 	MAX = 3				UMETA(DisplayName = "Do not use (Max Value)"),
 };
+
+inline RoomType GetRandomRoomType(RoomType previousRoomType) {
+	TArray<RoomType> choice = {};
+
+	if (previousRoomType == RoomType::START || previousRoomType == RoomType::RIGHTTOLEFT || previousRoomType == RoomType::FRONTTORIGHT) {
+		choice.Add(RoomType::RIGHTTOLEFT);
+		choice.Add(RoomType::LEFTTOBACK);
+	}
+	else {
+		choice.Add(RoomType::BACKTOFRONT);
+		choice.Add(RoomType::FRONTTORIGHT);
+	}
+
+	return choice[FMath::RandRange(0, 1)];
+}
+
+inline bool IsExitOnYAxis(RoomType roomType) {
+	if (roomType == RoomType::RIGHTTOLEFT || roomType == RoomType::FRONTTORIGHT)
+		return true;
+	return false;
+}

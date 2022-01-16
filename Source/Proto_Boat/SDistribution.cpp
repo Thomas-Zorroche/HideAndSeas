@@ -5,7 +5,7 @@
 #include <Kismet/KismetMathLibrary.h>
 #include "Kismet/GameplayStatics.h" 
 #include "GameManager.h"
-#include "ProceduralLevels/SIslandLevel.h"
+//#include "ProceduralLevels/SLevelIsland.h"
 #include "SIsland.h"
 
 // Sets default values
@@ -98,10 +98,10 @@ void ASDistribution::GenerateActorsFromGameManager()
 	auto GameManager = Cast<UGameManager>(UGameplayStatics::GetGameInstance(GetWorld()));
 	if (GameManager->HasIslandLevels())
 	{
-		auto IslandLevels = GameManager->GetIslandLevels();
-		GenerateIslands(IslandLevels);
-		// We generate other actors randomly
-		GenerateOthersActors();
+		//auto IslandLevels = GameManager->GetIslandLevels();
+		//GenerateIslands(IslandLevels);
+		//// We generate other actors randomly
+		//GenerateOthersActors();
 	}
 }
 
@@ -133,12 +133,12 @@ void ASDistribution::GenerateAllActors(TArray<FVector>& IslandLocations)
 	}
 }
 
-void ASDistribution::GenerateIslands(const TArray<USIslandLevel *>& IslandLevels)
+void ASDistribution::GenerateIslands(const TArray<FLevelIsland>& IslandLevels)
 {
-	for (auto Island : IslandLevels)
-	{
-		SpawnActor(Island->GetWorldPosition(), IslandClass);
-	}
+	//for (auto FLevelIsland : IslandLevels)
+	//{
+	//	//SpawnActor(Island->GetWorldPosition(), IslandClass);
+	//}
 }
 
 void ASDistribution::GenerateOthersActors()

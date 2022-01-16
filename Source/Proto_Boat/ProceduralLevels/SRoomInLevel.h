@@ -18,5 +18,6 @@ public:
 	int PoolIndex;
 
 	FVector WorldPosition;
-	bool IsFinished = false;
+	bool IsFinished;
+	void Init(int poolInde, FVector position, bool isFinished = false);
 };
