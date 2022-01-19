@@ -48,6 +48,10 @@ private:
 
 	void AddMarkerAtLocation(FVector Location = FVector(0, 0, 0));
 
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	class USEnemyComponent* EnemyComp;
+
 private:
 	static const int MARKERS_COUNT_MAX;
 
