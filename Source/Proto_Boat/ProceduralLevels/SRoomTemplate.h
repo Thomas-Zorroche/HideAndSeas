@@ -27,7 +27,8 @@ public:
 		FName SubLevelName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		FVector ExitPosition;
+	FVector ExitPosition;
+	
 	FVector EntryPosition;
 
 	BiomeType GetBiomeType() const;

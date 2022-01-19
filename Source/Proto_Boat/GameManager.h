@@ -11,19 +11,75 @@
 #include "Engine/GameInstance.h"
 #include "GameManager.generated.h"
 
+
 USTRUCT(BlueprintType)
-struct FRoomInLevel {
+struct FTile
+{
 	GENERATED_BODY()
 
 public:
-	// Index in GameManager PoolOfRoom, corresponding to the RoomTemplate to spawn
-	int PoolIndex;
+	FTile(TileType Type = TileType::PT_LEVELROOM, int LevelRoomID, const FName& Name = "")
+		: Type(Type), LevelName(Name), LevelRoomID(LevelRoomID) {}
 
-	FVector WorldPosition;
-	bool IsFinished;
-	FRoomInLevel() {};
-	FRoomInLevel(int poolIndex, FVector position, bool isFinished = false)
-		: PoolIndex(poolIndex), WorldPosition(position), IsFinished(isFinished) {}
+	TileType Type;
+	FName LevelName;
+
+	// ID of TilesPool[Type] 
+	int LevelRoomID;
+};
+
+//USTRUCT(BlueprintType)
+//struct FRoom : public FTile {
+//	GENERATED_BODY()
+//
+//public:
+//	bool IsFinished;
+//
+//	FRoomInLevel(int LevelRoomID = -1, bool isFinished = false)
+//		: FTile(TileType::LEVELROOM, ""), LevelRoomID(LevelRoomID), IsFinished(isFinished) {}
+//};
+
+USTRUCT(BlueprintType)
+struct FGrid
+{
+	GENERATED_BODY()
+
+public:
+	FGrid();
+
+	// RoomLevelPathID : Start = 0 --> End = ROOM_COUNT
+	// PoolTileID      : ID of TilesPool[TileType::PT_LEVELROOM] 
+	void SetRoomLevelTile(int RoomLevelPathID, int PoolTileID)
+	{
+		// Start Room is always on the same coordinates (2,2)
+		if (RoomLevelPathID == 0)
+		{
+			int RoomIndex = (GetGridWidth() * 2) + 2;
+			Grid[RoomIndex] = FTile(TileType::PT_LEVELROOM, PoolTileID, "");
+			return;
+		}
+		// Second Room is always on the same coordinates (4,2)
+		if (RoomLevelPathID == 1)
+		{
+			int RoomIndex = (GetGridWidth() * 2) + 4;
+			Grid[RoomIndex] = FTile(TileType::PT_LEVELROOM, PoolTileID, "");
+			return;
+		}
+
+		// For other tiles, compute coordinates with the help of previous one
+		
+		int PreviousTileIndex = ;
+		int IndexTile = PreviousTileIndex;
+		Grid[IndexTile] = FTile(TileType::PT_LEVELROOM, PoolTileID, "");
+
+	}
+
+	int GetGridWidth() const { return (ROOM_COUNT * 2) + 1; }
+
+	// Number of rooms in a level island (including start and end rooms)
+	const int ROOM_COUNT = 6;
+
+	TArray<FTile> Grid;
 };
 
 USTRUCT(BlueprintType)
@@ -36,15 +92,21 @@ public:
 		: Rooms({}), WorldPosition(worldPosition), Biome(BiomeType::FOREST), IsFinished(isFinished), IsMaritime(isMaritime) {}
 	// FVector GetWorldPosition() const { return WorldPosition; }
 
-	TArray<FRoomInLevel> Rooms;
+	//TArray<FRoomInLevel> Rooms;
 	FVector WorldPosition;
+
+	TArray<bool> FinishedStates;
 
 	BiomeType Biome;
 	bool IsFinished = false;
 	bool IsMaritime;
 
-	static int const LEVELSIZE = 6;
+	FGrid Grid;
 };
+
+
+
+
 
 
 UCLASS()
@@ -54,22 +116,23 @@ class PROTO_BOAT_API UGameManager : public UGameInstance
 public:
 	UGameManager();
 	UFUNCTION(BlueprintCallable, Category = "Custom")
-	void GetStreamingLevels();
+	void InitializeTilesPool();
 
-	UFUNCTION(BlueprintCallable, Category = "Custom")
-	bool AreLevelsShowned();
+	//UFUNCTION(BlueprintCallable, Category = "Custom")
+	//bool AreLevelsShowned();
+	//
+	//UFUNCTION(BlueprintCallable, Category = "Custom")
+	//void InitializeRoomsPool();
 
-	UFUNCTION(BlueprintCallable, Category = "Custom")
-	void InitializeRoomsPool();
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly)
-	TArray<FSRoomTemplate> PoolOfRoom;
+	//UPROPERTY(EditAnywhere,BlueprintReadOnly)
+	//TArray<FSRoomTemplate> PoolOfRoom;
 
 	// TODO remove pointers
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<FIslandLevel> Islands;
 
-	TArray< ULevelStreaming* > StreamingLevels;
+	// All levels to load for islands
+	//TArray< ULevelStreaming* > StreamingLevels;
 
 	const TArray<FIslandLevel>& GetIslandLevels() const { return Islands; }
 	
@@ -92,9 +155,19 @@ public:
 	TArray<int> FilterByBiomeAndType(BiomeType biome, RoomType roomType) const;
 
 private:
+	TileType FindTileTypeFromLevelName(const FName& LevelName) const;
+
 	void InitializeIslandLevel(FIslandLevel& level);
 
+	int GetGridWidth() const { return (ROOM_COUNT * 2) + 1; }
+
+private:
 	bool PoolInitialized = false;
+
+	TMap< TileType, TArray<FTile> > TilesPool;
+
+	// Number of rooms in a level island (including start and end rooms)
+	const int ROOM_COUNT = 6;
 	
 };
 
