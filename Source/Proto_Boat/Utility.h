@@ -34,7 +34,8 @@ enum class RoomType : uint8
 	BACKTOFRONT = 5		UMETA(DisplayName = "Back to Front"),
 	MAX = 6				UMETA(DisplayName = "Do not use (Max Value)"),
 };
-FString GetRoomTypeStr(RoomType Room)
+
+inline FString GetRoomTypeStr(RoomType Room)
 {
 	switch (Room)
 	{
@@ -57,7 +58,8 @@ enum class BiomeType : uint8
 	CASTLE = 2			UMETA(DisplayName = "Castle"),
 	MAX = 3				UMETA(DisplayName = "Do not use (Max Value)"),
 };
-FString GetBiomeTypeStr(BiomeType Biome)
+
+inline FString GetBiomeTypeStr(BiomeType Biome)
 {
 	switch (Biome)
 	{

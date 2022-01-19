@@ -72,31 +72,34 @@ TileType UGameManager::FindTileTypeFromLevelName(const FName& LevelName) const
 //}
 
 void UGameManager::GenerateIslands(TArray<FVector> IslandLocations, bool IsMaritime) {
-
 	for (auto location : IslandLocations) {
 		auto level = FIslandLevel(location, GetRandomBiomeType(), IsMaritime) ;
 		InitializeIslandLevel(level);
 		Islands.Add(level);
 	}
-
 }
 
-bool CheckBiomeAndRoomTypeFromLevelName(const FName& Name, BiomeType Biome, RoomType RoomType)
-{
-	FString NameStr = Name.ToString();
-	return NameStr.Contains(GetBiomeTypeStr(Biome)) && NameStr.Contains(GetRoomTypeStr(RoomType));
+
+FName UGameManager::GetRandomTile(TileType TileType, BiomeType Biome) {
+	// Get level room tiles
+	auto RoomTiles = TilesPool.Find(TileType);
+
+	// Get only level room with the right biome and type
+	auto FilteredRoomTiles = RoomTiles->FilterByPredicate([Biome](const FTile Tile) {
+		return CheckBiomeFromLevelName(Tile.LevelName, Biome);
+	});
+
+	// Pick a random room from the FilteredRoomTiles
+	int RandomIndex = FMath::RandRange(0, FilteredRoomTiles.Num() - 1);
+	FTile RandomTile = FilteredRoomTiles[RandomIndex];
+
+	// Return ID of TilesPool[TileType::LEVELROOM] 
+	//return RoomTiles->IndexOfByKey(RandomTile);
+	return RandomTile.LevelName;
 }
 
 // Find Random room from pool room that is roomtype and biometype, return the index in the PoolOfRooms
-int UGameManager::GetRandomRoom(RoomType RoomType, BiomeType Biome) {
-	//TArray<int> FilteredPool = FilterByBiomeAndType(biome, roomType);
-	//if (FilteredPool.Num() == 0) {
-	//	UE_LOG(LogTemp, Warning, TEXT("Filtered Pool is Empty : there is no room with this type and this biome"));
-	//	return -1;
-	//}
-
-	//return FilteredPool[FMath::RandRange(0, FilteredPool.Num()-1)];
-
+FName UGameManager::GetRandomRoom(RoomType RoomType, BiomeType Biome) {
 	// Get level room tiles
 	auto RoomTiles = TilesPool.Find(TileType::PT_LEVELROOM);
 
@@ -110,82 +113,74 @@ int UGameManager::GetRandomRoom(RoomType RoomType, BiomeType Biome) {
 	FTile RandomTile = FilteredRoomTiles[RandomIndex];
 
 	// Return ID of TilesPool[TileType::LEVELROOM] 
-	return RoomTiles->IndexOfByKey(RandomTile);
+	//return RoomTiles->IndexOfByKey(RandomTile);
+	return RandomTile.LevelName;
 }
 
-TArray<int> UGameManager::FilterByBiomeAndType(BiomeType biome, RoomType roomType) const{
-	TArray<int> indices = {};
-	for (int i = 0; i < PoolOfRoom.Num(); i++) {
-		auto biomtype = PoolOfRoom[i].GetBiomeType();
-		auto roomtype = PoolOfRoom[i].GetRoomType();
-		if (biomtype == biome && roomtype == roomType)
-			indices.Add(i);
-	}
-
-	return indices;
-}
 
 void UGameManager::InitializeIslandLevel(FIslandLevel& level) {
+	// Generate Path of RoomType
+	TArray<RoomType> RoomPath = {};
 
-	// Create Start room
-	int StartLevelID = GetRandomRoom(RoomType::START, level.Biome);
-    level.Rooms.Add(FRoomInLevel(StartLevelID));
-
+	// Start
+	RoomPath.Add(RoomType::START);
 	RoomType PreviousRoomType = RoomType::START;
+	level.FinishedStates.Add(true);
 
 	// In between Rooms
 	for (int i = 1; i < ROOM_COUNT - 1; i++) {
+		level.FinishedStates.Add(false);
 		RoomType NextRoomType = GetRandomRoomType(PreviousRoomType);
-		level.Rooms.Add(FRoomInLevel(GetRandomRoom(PreviousRoomType, level.Biome)));
+		RoomPath.Add(NextRoomType);
 		PreviousRoomType = NextRoomType;
 	}
 
 	// Create n-1 room
+	level.FinishedStates.Add(false);
 	RoomType BeforeEndRoomType = IsExitOnYAxis(PreviousRoomType) ? RoomType::LEFTTOBACK : RoomType::BACKTOFRONT;
-	level.Rooms.Add(FRoomInLevel(GetRandomRoom(PreviousRoomType, level.Biome)));
+	RoomPath.Add(BeforeEndRoomType);
 
 	// Create End Room
-	level.Rooms.Add(FRoomInLevel(GetRandomRoom(RoomType::END, level.Biome)));
+	level.FinishedStates.Add(false);
+	RoomPath.Add(RoomType::END);
 
-	// Intialize Grid
-	level.Grid.Init(FTile(), GetGridWidth() / GetGridWidth());
+	// Initialize Grid
+	InitializeGrid(level.Grid, RoomPath, level.Biome);
 
-	// Fill the start room
-	level.Grid.SetStartTileID(level.Rooms[0]);
-	
-	// Fill Grid with Level Room
-	for (int i = 1; i < ROOM_COUNT; i++)
-	{
-		level.Grid.SetNextTileID(level.Rooms[i]);
+}
 
-	}
-
-	// Fill grid tiles with Landscape
-	for (int i = 0; i < GetGridWidth(); i++)
-	{
-		int X = i % (GetGridWidth() + 1);
-		int Y = i / GetGridWidth();
-
-		// X even : Room Level column
-		if (X % 2 == 0)
-		{
-
-		}
-		// X odd : Transition column
-		else
-		{
-
-		}
-
-		// Y even : Room Level row
-		if (Y % 2 == 0)
-		{
-
-		}
-		// Y odd : Transition row
-		else
-		{
-
+void UGameManager::InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType> RoomPath, BiomeType Biome) {
+	// Initialize Grid Content with all NPT
+	Grid.Init(TArray<FTile>(), GetGridWidth());
+	for (int x = 0; x < GetGridWidth(); x++) {
+		Grid[x].Init(FTile(), GetGridWidth());
+		for (int y = 0; y < GetGridWidth(); y++) {
+			//FVector2D CurrentCoord(x, y);
+			if (x % 2 != 0 && y % 2 != 0)
+				Grid[x][y] = FTile(TileType::NPT_SQUARE, GetRandomTile(TileType::NPT_SQUARE, Biome));
+			else if (x % 2 != 0 || y % 2 != 0)
+				Grid[x][y] = FTile(TileType::NPT_TRANSITION, GetRandomTile(TileType::NPT_TRANSITION, Biome));
+			else if (x % 2 == 0 && y % 2 == 0)
+				Grid[x][y] = FTile(TileType::NPT_LANDSCAPE, GetRandomTile(TileType::NPT_LANDSCAPE, Biome));
 		}
 	}
+
+	// Update Tiles along Path coord to be Playable Tiles (Rooms and Transitions)
+	FVector2D PreviousCoord = FVector2D(2, 2);
+	Grid[PreviousCoord.X][PreviousCoord.Y] = FTile(TileType::PT_LEVELROOM, GetRandomRoom(RoomType::START, Biome));
+	Grid[3][2] = FTile(TileType::PT_TRANSITION, GetRandomTile(TileType::PT_TRANSITION, Biome));
+
+	for (int i = 0; i < RoomPath.Num() - 1; i++) {
+		RoomType PreviousRoomType = RoomPath[i];
+		RoomType NextRoomType = RoomPath[i+1];
+		FVector2D NextCoord = GetNextCoordinate(PreviousRoomType, PreviousCoord);
+		FVector2D PTTransitionCoord = GetTransitionCoordinate(NextRoomType, NextCoord);
+		Grid[NextCoord.X][NextCoord.Y] = FTile(TileType::PT_LEVELROOM, GetRandomRoom(NextRoomType, Biome));
+		Grid[PTTransitionCoord.X][PTTransitionCoord.Y] = FTile(TileType::PT_TRANSITION, GetRandomTile(TileType::PT_TRANSITION, Biome));
+		PreviousCoord = NextCoord;
+	}
+
+	FVector2D NextCoord = GetNextCoordinate(RoomPath.Last(1), PreviousCoord);
+	Grid[NextCoord.X][NextCoord.Y] = FTile(TileType::PT_LEVELROOM, GetRandomRoom(RoomType::END, Biome));
+
 }
