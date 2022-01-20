@@ -18,12 +18,14 @@ struct FTile
 	GENERATED_BODY()
 
 public:
-	FTile(TileType Type = TileType::PT_LEVELROOM, const FName& Name = "")
-		: Type(Type), LevelName(Name) {}
+	FTile(TileType Type = TileType::PT_LEVELROOM, FString Name = "", uint8 slID = 0)
+		: Type(Type), LevelName(Name), StreamingLevelID(slID) {}
 
 	TileType Type;
-	FName LevelName;
+	FString LevelName;
 
+	// ID in the GetWorld().StreamingLevels
+	uint8 StreamingLevelID;
 };
 
 
@@ -59,10 +61,21 @@ class PROTO_BOAT_API UGameManager : public UGameInstance
 public:
 	UGameManager();
 
+	/////////////////////////////////////////////////////////////////////////////////
+	
+	// Create a Tiles Pool
 	UFUNCTION(BlueprintCallable, Category = "GameManager")
 	void InitializeTilesPool();
 
-	const TArray<FIslandLevel>& GetIslandLevels() const { return Islands; }
+	// Create Islands Level Data
+	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	void GenerateIslands(TArray<class ASIsland*> Islands, bool IsMaritime);
+
+	// Spawn Tiles inside a Island Level
+	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	void SpawnLevelTiles();
+	
+	/////////////////////////////////////////////////////////////////////////////////
 	
 	UFUNCTION(BlueprintCallable, Category = "GameManager")
 	bool HasIslandLevels() const { return Islands.Num() > 0; }
@@ -70,23 +83,24 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "GameManager")
 	bool IsTilesPoolNotEmpty() const { return TilesPool.Find(TileType::NPT_LANDSCAPE)->Num() > 0; }
 
-	UFUNCTION(BlueprintCallable, Category = "GameManager")
-	void GenerateIslands(TArray<class ASIsland*> Islands, bool IsMaritime);
+	const TArray<FIslandLevel>& GetIslandLevels() const { return Islands; }
 
-	FName GetRandomRoom(RoomType roomType, BiomeType biome);
-	FName GetRandomTile(TileType TileType, BiomeType biome);
+	FTile GetRandomRoom(RoomType roomType, BiomeType biome);
+	FTile GetRandomTile(TileType TileType, BiomeType biome);
 
 	static BiomeType GetRandomBiomeType() {
 		return  static_cast<BiomeType>(FMath::RandRange(0, (int)BiomeType::MAX - 1));
 	}
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly)
 	TArray<FIslandLevel> Islands;
-
+	
+	UPROPERTY(BlueprintReadWrite)
+	uint8 CurrentIslandID;
 
 private:
-	TileType FindTileTypeFromLevelName(const FName& LevelName) const;
+	TileType FindTileTypeFromLevelName(const FString& LevelName) const;
 
 	void InitializeIslandLevel(FIslandLevel& level);
 	
@@ -101,7 +115,6 @@ private:
 
 	// Number of rooms in a level island (including start and end rooms)
 	const int ROOM_COUNT = 6;
-	
 };
 
 
@@ -120,14 +133,12 @@ inline FVector2D GetTransitionCoordinate(RoomType RoomType, FVector2D Coordinate
 }
 
 
-inline bool CheckBiomeAndRoomTypeFromLevelName(const FName& Name, BiomeType Biome, RoomType RoomType)
+inline bool CheckBiomeAndRoomTypeFromLevelName(const FString& Name, BiomeType Biome, RoomType RoomType)
 {
-	FString NameStr = Name.ToString();
-	return NameStr.Contains(GetBiomeTypeStr(Biome)) && NameStr.Contains(GetRoomTypeStr(RoomType));
+	return Name.Contains(GetBiomeTypeStr(Biome)) && Name.Contains(GetRoomTypeStr(RoomType));
 }
 
-inline bool CheckBiomeFromLevelName(const FName& Name, BiomeType Biome)
+inline bool CheckBiomeFromLevelName(const FString& Name, BiomeType Biome)
 {
-	FString NameStr = Name.ToString();
-	return NameStr.Contains(GetBiomeTypeStr(Biome));
+	return Name.Contains(GetBiomeTypeStr(Biome));
 }
