@@ -5,10 +5,9 @@
 #include "./SProceduralRoom.h"
 #include "Runtime/Engine/Classes/Engine/LevelStreaming.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
+#include "SIsland.h"
 
 UGameManager::UGameManager() {
-	//StreamingLevels = {};
-	//PoolOfRoom = {};
 	Islands = {};
 	TilesPool = {};
 
@@ -25,14 +24,12 @@ void UGameManager::InitializeTilesPool() {
 
 	for (ULevelStreaming* StreamingLevel : StreamedLevels) {
 		FName LevelName = StreamingLevel->GetWorldAssetPackageFName();
-		
-		//UE_LOG(LogTemp, Warning, TEXT("****** LEVEL NAME : %s"), LevelName);
-
 		// Add a tile in the pool
 		TileType Type = FindTileTypeFromLevelName(LevelName);
 		auto Tiles = TilesPool.Find(Type);
 		Tiles->Add(FTile(Type, LevelName));
 	}
+
 }
 
 TileType UGameManager::FindTileTypeFromLevelName(const FName& LevelName) const
@@ -45,37 +42,13 @@ TileType UGameManager::FindTileTypeFromLevelName(const FName& LevelName) const
 	else											return TileType::PT_LEVELROOM;
 }
 
-// TODO: TO BE REMOVED
-//bool UGameManager::AreLevelsShowned() {
-//	if (PoolInitialized)
-//		return false;
-//	for (ULevelStreaming* streamingLevel : StreamingLevels) {
-//		if (!streamingLevel->IsLevelVisible())
-//			return false;
-//	}
-//	UE_LOG(LogTemp, Warning, TEXT("levels shown"));
-//	return true;
-//}
-
-
-// TODO: TO BE REMOVED
-//void UGameManager::InitializeRoomsPool() {
-//	for (ULevelStreaming* streamingLevel : StreamingLevels) {
-//		ASProceduralRoom* room = Cast<ASProceduralRoom>(streamingLevel->GetLevelScriptActor());
-//		if (room) {
-//			FSRoomTemplate roomTemplate(streamingLevel->GetWorldAssetPackageFName(), room->GetExitTransform().GetLocation());
-//			PoolOfRoom.Add(roomTemplate);
-//		}
-//		UE_LOG(LogTemp, Warning, TEXT("room template"));
-//	}
-//	PoolInitialized = true;
-//}
-
-void UGameManager::GenerateIslands(TArray<FVector> IslandLocations, bool IsMaritime) {
-	for (auto location : IslandLocations) {
-		auto level = FIslandLevel(location, GetRandomBiomeType(), IsMaritime) ;
+void UGameManager::GenerateIslands(TArray<ASIsland*> IslandActors, bool IsMaritime) {
+	for (auto Island : IslandActors) {
+		auto level = FIslandLevel(Island->GetActorLocation(), GetRandomBiomeType(), IsMaritime);
 		InitializeIslandLevel(level);
 		Islands.Add(level);
+
+		Island->SetID(Islands.Num() - 1);
 	}
 }
 
@@ -128,7 +101,7 @@ void UGameManager::InitializeIslandLevel(FIslandLevel& level) {
 	level.FinishedStates.Add(true);
 
 	// In between Rooms
-	for (int i = 1; i < ROOM_COUNT - 1; i++) {
+	for (int i = 1; i < ROOM_COUNT - 2; i++) {
 		level.FinishedStates.Add(false);
 		RoomType NextRoomType = GetRandomRoomType(PreviousRoomType);
 		RoomPath.Add(NextRoomType);
@@ -180,7 +153,9 @@ void UGameManager::InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType> 
 		PreviousCoord = NextCoord;
 	}
 
-	FVector2D NextCoord = GetNextCoordinate(RoomPath.Last(1), PreviousCoord);
-	Grid[NextCoord.X][NextCoord.Y] = FTile(TileType::PT_LEVELROOM, GetRandomRoom(RoomType::END, Biome));
+	FVector2D NextCoord = GetNextCoordinate(RoomPath.Last(1) /* avant dernier */, PreviousCoord);
+	int x = NextCoord.X;
+	int y = NextCoord.Y;
+	Grid[x][y] = FTile(TileType::PT_LEVELROOM, GetRandomRoom(RoomType::END, Biome));
 
 }

@@ -59,16 +59,19 @@ class PROTO_BOAT_API UGameManager : public UGameInstance
 public:
 	UGameManager();
 
-	UFUNCTION(BlueprintCallable, Category = "Custom")
+	UFUNCTION(BlueprintCallable, Category = "GameManager")
 	void InitializeTilesPool();
 
 	const TArray<FIslandLevel>& GetIslandLevels() const { return Islands; }
 	
-	UFUNCTION(BlueprintCallable, Category = "Custom")
+	UFUNCTION(BlueprintCallable, Category = "GameManager")
 	bool HasIslandLevels() const { return Islands.Num() > 0; }
 
-	UFUNCTION(BlueprintCallable, Category = "Custom")
-	void GenerateIslands(TArray<FVector> IslandLocations, bool IsMaritime);
+	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	bool IsTilesPoolNotEmpty() const { return TilesPool.Find(TileType::NPT_LANDSCAPE)->Num() > 0; }
+
+	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	void GenerateIslands(TArray<class ASIsland*> Islands, bool IsMaritime);
 
 	FName GetRandomRoom(RoomType roomType, BiomeType biome);
 	FName GetRandomTile(TileType TileType, BiomeType biome);

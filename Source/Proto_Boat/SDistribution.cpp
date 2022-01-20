@@ -45,7 +45,7 @@ void ASDistribution::UpdateEditor()
 {
 	Reset();
 
-	TArray<FVector> Dummy;
+	TArray<ASIsland*> Dummy;
 	GenerateAllActors(Dummy);
 }
 
@@ -109,24 +109,34 @@ void ASDistribution::GenerateActorsFromGameManager()
 * First time we launch the game, we have to create randomly ALL actors location
 * We have to return the locations of islands
 */ 
-TArray<FVector> ASDistribution::GenerateActorsRandomly()
+TArray<ASIsland*> ASDistribution::GenerateActorsRandomly()
 {
 	Reset();
 
-	TArray<FVector> IslandLocations;
+	TArray<ASIsland*> IslandLocations;
 	GenerateAllActors(IslandLocations);
 	return IslandLocations;
 }
 
-void ASDistribution::GenerateAllActors(TArray<FVector>& IslandLocations)
+void ASDistribution::GenerateAllActors(TArray<ASIsland*>& Islands)
 {
+	Islands.Empty();
 	for (const auto& ActorData : ActorsToSpawnData)
 	{
 		if (ActorData.Class)
 		{
 			auto IsIsland = (ActorData.Class == IslandClass);
 			if (IsIsland)
-				IslandLocations = SpawnActorsRandomly(ActorData);
+			{
+
+				auto SpawnedActors = SpawnActorsRandomly(ActorData);
+				for (auto Actor : SpawnedActors)
+				{
+					auto Island = Cast<ASIsland>(Actor);
+					if (Island)
+						Islands.Add(Island);
+				}
+			}
 			else
 				SpawnActorsRandomly(ActorData);
 		}
@@ -159,10 +169,10 @@ void ASDistribution::GenerateOthersActors()
 	}
 }
 
-TArray<FVector> ASDistribution::SpawnActorsRandomly(const FActorToSpawnData& ActorData)
+TArray<AActor*> ASDistribution::SpawnActorsRandomly(const FActorToSpawnData& ActorData)
 {
 	int SpawnActorCount = 0;
-	TArray<FVector> Locations;
+	TArray<AActor*> Actors;
 	for (size_t i = 0; i < ActorData.Count; i++)
 	{
 		FVector SpawnLocation(0.0f, 0.0f, 0.0f);
@@ -172,13 +182,16 @@ TArray<FVector> ASDistribution::SpawnActorsRandomly(const FActorToSpawnData& Act
 			UE_LOG(LogTemp, Error, TEXT("Spawn Location is not valid!"));
 			continue;
 		}
-		Locations.Add(SpawnLocation);
 
 		if (!ZDistribution)
 			SpawnLocation.Z = GetActorLocation().Z;
-
-		if (SpawnActor(SpawnLocation, ActorData.Class))
+		
+		auto SpawnedActor = SpawnActor(SpawnLocation, ActorData.Class);
+		if (SpawnedActor)
+		{
 			SpawnActorCount++;
+			Actors.Add(SpawnedActor);
+		}
 	}
 
 	if (SpawnActorCount != ActorData.Count)
@@ -186,10 +199,10 @@ TArray<FVector> ASDistribution::SpawnActorsRandomly(const FActorToSpawnData& Act
 		UE_LOG(LogTemp, Error, TEXT("Only %i Actors have been created but %i were asked!"), SpawnActorCount, ActorData.Count);
 	}
 
-	return Locations;
+	return Actors;
 }
 
-bool ASDistribution::SpawnActor(const FVector& SpawnLocation, TSubclassOf<AActor> Class)
+AActor* ASDistribution::SpawnActor(const FVector& SpawnLocation, TSubclassOf<AActor> Class)
 {
 	// Create new Actor
 	AActor* Actor = GetWorld()->SpawnActor<AActor>(Class, SpawnLocation, GetActorRotation());
@@ -197,13 +210,12 @@ bool ASDistribution::SpawnActor(const FVector& SpawnLocation, TSubclassOf<AActor
 	{
 		Actor->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
 		ActorsInWorld.Add(Actor);
-		return true;
 	}
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("Cannot spawn Actor!"));
-		return false;
 	}
+	return Actor;
 }
 
 // Must be used only at the beginning of the game
