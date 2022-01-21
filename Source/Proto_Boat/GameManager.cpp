@@ -39,10 +39,10 @@ void UGameManager::InitializeTilesPool() {
 TileType UGameManager::FindTileTypeFromLevelName(const FString& LevelName) const
 {
 	if (LevelName.Contains("NPT_Transition"))	return TileType::NPT_TRANSITION;
-	if (LevelName.Contains("PT_Transition"))		return TileType::PT_TRANSITION;
-	if (LevelName.Contains("Landscape"))			return TileType::NPT_LANDSCAPE;
+	if (LevelName.Contains("PT_Transition"))	return TileType::PT_TRANSITION;
+	if (LevelName.Contains("Landscape"))		return TileType::NPT_LANDSCAPE;
 	if (LevelName.Contains("Square"))			return TileType::NPT_SQUARE;
-	else											return TileType::PT_LEVELROOM;
+	else										return TileType::PT_LEVELROOM;
 }
 
 void UGameManager::GenerateIslands(TArray<ASIsland*> IslandActors, bool IsMaritime) {
@@ -99,26 +99,21 @@ void UGameManager::InitializeIslandLevel(FIslandLevel& level) {
 	TArray<RoomType> RoomPath = {};
 
 	// Start
-	RoomPath.Add(RoomType::START);
-	RoomType PreviousRoomType = RoomType::START;
+	RoomType PreviousRoomType = FMath::RandRange(0, 1) == 0 ? RoomType::START_Y : RoomType::START_X;
+	RoomPath.Add(PreviousRoomType);
 	level.FinishedStates.Add(true);
 
 	// In between Rooms
-	for (int i = 1; i < ROOM_COUNT - 2; i++) {
+	for (int i = 1; i < ROOM_COUNT - 1; i++) {
 		level.FinishedStates.Add(false);
 		RoomType NextRoomType = GetRandomRoomType(PreviousRoomType);
 		RoomPath.Add(NextRoomType);
 		PreviousRoomType = NextRoomType;
 	}
 
-	// Create n-1 room
-	level.FinishedStates.Add(false);
-	RoomType BeforeEndRoomType = IsExitOnYAxis(PreviousRoomType) ? RoomType::LEFTTOBACK : RoomType::BACKTOFRONT;
-	RoomPath.Add(BeforeEndRoomType);
-
 	// Create End Room
 	level.FinishedStates.Add(false);
-	RoomPath.Add(RoomType::END);
+	RoomPath.Add(GetRandomEndType(PreviousRoomType));
 
 	// Initialize Grid
 	InitializeGrid(level.Grid, RoomPath, level.Biome);
@@ -142,8 +137,9 @@ void UGameManager::InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType> 
 
 	// Update Tiles along Path coord to be Playable Tiles (Rooms and Transitions)
 	FVector2D PreviousCoord = FVector2D(2, 2);
-	Grid[PreviousCoord.X][PreviousCoord.Y] = GetRandomRoom(RoomType::START, Biome);
-	Grid[3][2] = GetRandomTile(TileType::PT_TRANSITION, Biome);
+	Grid[PreviousCoord.X][PreviousCoord.Y] = GetRandomRoom(RoomPath[0], Biome);
+	FVector2D StartTransitionCoord = GetTransitionCoordinate(RoomPath[0], PreviousCoord);
+	Grid[StartTransitionCoord.X][StartTransitionCoord.Y] = GetRandomTile(TileType::PT_TRANSITION, Biome);
 
 	for (int i = 0; i < RoomPath.Num() - 2; i++) {
 		RoomType PreviousRoomType = RoomPath[i];
@@ -160,7 +156,7 @@ void UGameManager::InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType> 
 	FVector2D NextCoord = GetNextCoordinate(RoomPath.Last(1) /* avant dernier */, PreviousCoord);
 	int x = NextCoord.X;
 	int y = NextCoord.Y;
-	Grid[x][y] = GetRandomRoom(RoomType::END, Biome);
+	Grid[x][y] = GetRandomRoom(RoomPath.Last(0), Biome);
 }
 
 float GetWorldLocation(uint8 id, int TRANSITION_GRID_SIZE, int LANDSCAPE_GRID_SIZE)

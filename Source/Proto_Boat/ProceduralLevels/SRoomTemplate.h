@@ -19,21 +19,21 @@ struct FSRoomTemplate
 {
 	GENERATED_BODY()
 public:
-	FSRoomTemplate() {};
-	FSRoomTemplate(FName _SubLevelName, FVector _ExitPosition) : SubLevelName(_SubLevelName), ExitPosition(_ExitPosition) {};
+	//FSRoomTemplate() {};
+	//FSRoomTemplate(FName _SubLevelName, FVector _ExitPosition) : SubLevelName(_SubLevelName), ExitPosition(_ExitPosition) {};
 
-	//private :
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		FName SubLevelName;
+	////private :
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//	FName SubLevelName;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FVector ExitPosition;
-	
-	FVector EntryPosition;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//FVector ExitPosition;
+	//
+	//FVector EntryPosition;
 
-	BiomeType GetBiomeType() const;
-	RoomType GetRoomType() const;
-	int GetId();
+	//BiomeType GetBiomeType() const;
+	//RoomType GetRoomType() const;
+	//int GetId();
 
-	TArray<FString> getTabName() const;
+	//TArray<FString> getTabName() const;
 };

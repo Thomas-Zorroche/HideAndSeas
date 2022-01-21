@@ -106,7 +106,7 @@ private:
 	
 	void InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType> RoomPath, BiomeType Biome);
 
-	int GetGridWidth() const { return (ROOM_COUNT * 2) + 1; };
+	int GetGridWidth() const { return (ROOM_COUNT * 2) + 3; };
 
 private:
 	bool PoolInitialized = false;
@@ -120,15 +120,15 @@ private:
 
 // Return Coordinates of the next Room in path depending on the current RoomType and coordinates
 inline FVector2D GetNextCoordinate(RoomType RoomType, FVector2D Coordinates) {
-	if (RoomType == RoomType::LEFTTOBACK || RoomType == RoomType::BACKTOFRONT) return Coordinates + FVector2D(0, 2);
-	if (RoomType == RoomType::FRONTTORIGHT || RoomType == RoomType::RIGHTTOLEFT || RoomType == RoomType::START ) return Coordinates + FVector2D(2, 0);
+	if (RoomType == RoomType::LEFTTOBACK || RoomType == RoomType::BACKTOFRONT || RoomType == RoomType::START_X) return Coordinates + FVector2D(0, 2);
+	if (RoomType == RoomType::FRONTTORIGHT || RoomType == RoomType::RIGHTTOLEFT || RoomType == RoomType::START_Y ) return Coordinates + FVector2D(2, 0);
 	else return Coordinates;
 }
 
 // Return Coordinates of the Playable Transition between current and next Room depending on the current RoomType and coordinates
 inline FVector2D GetTransitionCoordinate(RoomType RoomType, FVector2D Coordinates) {
-	if (RoomType == RoomType::LEFTTOBACK || RoomType == RoomType::BACKTOFRONT) return Coordinates + FVector2D(0, 1);
-	if (RoomType == RoomType::FRONTTORIGHT || RoomType == RoomType::RIGHTTOLEFT || RoomType == RoomType::START) return Coordinates + FVector2D(1, 0);
+	if (RoomType == RoomType::LEFTTOBACK || RoomType == RoomType::BACKTOFRONT || RoomType == RoomType::START_X) return Coordinates + FVector2D(0, 1);
+	if (RoomType == RoomType::FRONTTORIGHT || RoomType == RoomType::RIGHTTOLEFT || RoomType == RoomType::START_Y) return Coordinates + FVector2D(1, 0);
 	else return Coordinates;
 }
 

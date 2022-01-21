@@ -26,21 +26,25 @@ enum class TileType : uint8
 UENUM(BlueprintType)
 enum class RoomType : uint8
 {
-	START = 0			UMETA(DisplayName = "Start"),
-	END = 1				UMETA(DisplayName = "End"),
-	LEFTTOBACK = 2		UMETA(DisplayName = "Left to Back"),
-	FRONTTORIGHT = 3	UMETA(DisplayName = "Front to Right"),
-	RIGHTTOLEFT = 4		UMETA(DisplayName = "Right to Left"),
-	BACKTOFRONT = 5		UMETA(DisplayName = "Back to Front"),
-	MAX = 6				UMETA(DisplayName = "Do not use (Max Value)"),
+	START_Y = 0			UMETA(DisplayName = "Start (Y Axis)"),
+	START_X = 1			UMETA(DisplayName = "Start (X Axis)"),
+	END_Y = 2			UMETA(DisplayName = "End (Y Axis)"),
+	END_X = 3			UMETA(DisplayName = "End (X Axis)"),
+	LEFTTOBACK = 4		UMETA(DisplayName = "Left to Back"),
+	FRONTTORIGHT = 5	UMETA(DisplayName = "Front to Right"),
+	RIGHTTOLEFT = 6		UMETA(DisplayName = "Right to Left"),
+	BACKTOFRONT = 7		UMETA(DisplayName = "Back to Front"),
+	MAX = 8				UMETA(DisplayName = "Do not use (Max Value)"),
 };
 
 inline FString GetRoomTypeStr(RoomType Room)
 {
 	switch (Room)
 	{
-	case RoomType::START:		 return "Start"; break;
-	case RoomType::END:			 return "End"; break;
+	case RoomType::START_Y:		 return "StartY"; break;
+	case RoomType::START_X:		 return "StartX"; break;
+	case RoomType::END_Y:		 return "EndY"; break;
+	case RoomType::END_X:		 return "EndX"; break;
 	case RoomType::LEFTTOBACK:   return "LtB"; break;
 	case RoomType::FRONTTORIGHT: return "FtR";  break;
 	case RoomType::RIGHTTOLEFT:  return "LtR";  break;
@@ -73,7 +77,7 @@ inline FString GetBiomeTypeStr(BiomeType Biome)
 inline RoomType GetRandomRoomType(RoomType previousRoomType) {
 	TArray<RoomType> choice = {};
 
-	if (previousRoomType == RoomType::START || previousRoomType == RoomType::RIGHTTOLEFT || previousRoomType == RoomType::FRONTTORIGHT) {
+	if (previousRoomType == RoomType::START_Y || previousRoomType == RoomType::RIGHTTOLEFT || previousRoomType == RoomType::FRONTTORIGHT) {
 		choice.Add(RoomType::RIGHTTOLEFT);
 		choice.Add(RoomType::LEFTTOBACK);
 	}
@@ -83,6 +87,12 @@ inline RoomType GetRandomRoomType(RoomType previousRoomType) {
 	}
 
 	return choice[FMath::RandRange(0, 1)];
+}
+
+inline RoomType GetRandomEndType(RoomType previousRoomType) {
+	if (previousRoomType == RoomType::START_Y || previousRoomType == RoomType::RIGHTTOLEFT || previousRoomType == RoomType::FRONTTORIGHT)
+		return RoomType::END_Y;
+	else return RoomType::END_X;
 }
 
 inline bool IsExitOnYAxis(RoomType roomType) {
