@@ -98,10 +98,10 @@ void ASDistribution::GenerateActorsFromGameManager()
 	auto GameManager = Cast<UGameManager>(UGameplayStatics::GetGameInstance(GetWorld()));
 	if (GameManager->HasIslandLevels())
 	{
-		//auto IslandLevels = GameManager->GetIslandLevels();
-		//GenerateIslands(IslandLevels);
-		//// We generate other actors randomly
-		//GenerateOthersActors();
+		auto IslandLevels = GameManager->GetIslandLevels();
+		GenerateIslands(IslandLevels);
+		// We generate other actors randomly
+		GenerateOthersActors();
 	}
 }
 
@@ -125,7 +125,7 @@ void ASDistribution::GenerateAllActors(TArray<ASIsland*>& Islands)
 	{
 		if (ActorData.Class)
 		{
-			auto IsIsland = (ActorData.Class == IslandClass);
+			bool IsIsland = (ActorData.Class == IslandClass);
 			if (IsIsland)
 			{
 
@@ -143,12 +143,17 @@ void ASDistribution::GenerateAllActors(TArray<ASIsland*>& Islands)
 	}
 }
 
-void ASDistribution::GenerateIslands(const TArray<FLevelIsland>& IslandLevels)
+void ASDistribution::GenerateIslands(const TArray<FIslandLevel>& IslandLevels)
 {
-	//for (auto FLevelIsland : IslandLevels)
-	//{
-	//	//SpawnActor(Island->GetWorldPosition(), IslandClass);
-	//}
+	int IslandID = 0;
+	for (auto Island : IslandLevels)
+	{
+		auto actor = SpawnActor(Island.WorldPosition, IslandClass);
+		auto island = Cast<ASIsland>(actor);
+		if (island) 
+			island->SetID(IslandID);
+		IslandID++;
+	}
 }
 
 void ASDistribution::GenerateOthersActors()
@@ -157,12 +162,13 @@ void ASDistribution::GenerateOthersActors()
 	{
 		if (ActorData.Class)
 		{
+			bool IsIsland = (ActorData.Class == IslandClass);
+			if (IsIsland)
+				continue;
+
 			FVector SpawnLocation(0.0f, 0.0f, 0.0f);
 			bool SpawnLocationValid = GenerateRandomCoordinatesInsideBox(SpawnLocation, ActorData);
 
-			auto Island = Cast<ASIsland>(ActorData.Class);
-			if (Island)
-				continue;
 
 			SpawnActorsRandomly(ActorData);
 		}

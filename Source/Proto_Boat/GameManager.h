@@ -35,9 +35,9 @@ struct FIslandLevel {
 
 public:
 	FIslandLevel() {};
-	//  [TO DO] : Lorsqu'on aura assez de room changer la valeur du biome entrée en dur...
+	//  [TO DO] : Lorsqu'on aura assez de tiles changer la valeur du biome entrée en dur...
 	FIslandLevel(FVector worldPosition, BiomeType biome, bool isMaritime, bool isFinished = false)
-		:WorldPosition(worldPosition), Biome(BiomeType::FOREST), IsFinished(isFinished), IsMaritime(isMaritime) {}
+		:WorldPosition(worldPosition), Biome(BiomeType::FOREST /* biome */), IsFinished(isFinished), IsMaritime(isMaritime) {}
 	// FVector GetWorldPosition() const { return WorldPosition; }
 
 	//TArray<FRoomInLevel> Rooms;

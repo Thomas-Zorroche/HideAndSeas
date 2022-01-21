@@ -57,7 +57,7 @@ private:
 	void Reset();
 
 	void GenerateAllActors(TArray<class ASIsland*>& Islands);    // All actors
-	void GenerateIslands(const TArray<class FLevelIsland>& IslandLevels);	     // Only Island Actors
+	void GenerateIslands(const TArray<struct  FIslandLevel>& IslandLevels);	     // Only Island Actors
 	void GenerateOthersActors(); // Only actors that are not Island
 
 	TArray<AActor*> SpawnActorsRandomly(const FActorToSpawnData& ActorData);
