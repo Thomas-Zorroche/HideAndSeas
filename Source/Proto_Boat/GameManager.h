@@ -78,6 +78,9 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////
 	
 	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	FTransform GetBoatSpawnPosition(TArray<ASIsland*> Islands);
+
+	UFUNCTION(BlueprintCallable, Category = "GameManager")
 	bool HasIslandLevels() const { return Islands.Num() > 0; }
 
 	UFUNCTION(BlueprintCallable, Category = "GameManager")
@@ -97,7 +100,7 @@ public:
 	TArray<FIslandLevel> Islands;
 	
 	UPROPERTY(BlueprintReadWrite)
-	uint8 CurrentIslandID;
+	uint8 CurrentIslandID = 255;
 
 private:
 	TileType FindTileTypeFromLevelName(const FString& LevelName) const;

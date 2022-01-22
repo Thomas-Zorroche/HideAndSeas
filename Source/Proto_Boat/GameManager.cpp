@@ -219,3 +219,11 @@ void UGameManager::SpawnLevelTiles()
 	}
 }
 
+FTransform UGameManager::GetBoatSpawnPosition(TArray<ASIsland*> ActorIslands) {
+	for (auto Island : ActorIslands) {
+		if (Island->GetID() == CurrentIslandID) {
+			return Island->ExitTransform;
+		}
+	}
+	return FTransform();
+}
