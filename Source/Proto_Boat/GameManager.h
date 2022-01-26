@@ -110,6 +110,10 @@ private:
 	void InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType> RoomPath, BiomeType Biome);
 
 	int GetGridWidth() const { return (ROOM_COUNT * 2) + 3; };
+	int GetGridTiles() const { return GetGridWidth() * GetGridWidth(); };
+
+	UFUNCTION()
+	void OnAllTilesLoaded();
 
 private:
 	bool PoolInitialized = false;
@@ -118,6 +122,8 @@ private:
 
 	// Number of rooms in a level island (including start and end rooms)
 	const int ROOM_COUNT = 6;
+
+	int TilesLoadedInLevel = 0;
 };
 
 

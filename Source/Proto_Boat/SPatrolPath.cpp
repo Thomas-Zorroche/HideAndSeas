@@ -18,11 +18,8 @@ ASPatrolPath::ASPatrolPath()
 	EnemyComp = CreateDefaultSubobject<USEnemyComponent>("EnemyComponent");
 }
 
-// Called when the game starts or when spawned
-void ASPatrolPath::BeginPlay()
+void ASPatrolPath::OnLevelLoaded_Implementation()
 {
-	Super::BeginPlay();
-
 	TArray<AActor*> AttachedActors;
 	this->GetAttachedActors(AttachedActors);
 	UE_LOG(LogTemp, Warning, TEXT("Children at start: %d"), AttachedActors.Num());
@@ -41,20 +38,6 @@ void ASPatrolPath::BeginPlay()
 	OnMarkersChanged();
 }
 
-void ASPatrolPath::Destroyed()
-{
-	Super::Destroy();
-
-	// Destroy previous actors in the world
-	for (auto& Marker : Markers)
-	{
-		if (Marker)
-		{
-			Marker->Destroy();
-		}
-	}
-	Markers.Empty();
-}
 
 // Called every frame
 void ASPatrolPath::Tick(float DeltaTime)

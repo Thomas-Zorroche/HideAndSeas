@@ -6,6 +6,7 @@
 #include "Engine/LevelStreaming.h" 
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "SIsland.h"
+#include "Interfaces/SLevelLoaded.h"
 
 UGameManager::UGameManager() {
 	Islands = {};
@@ -200,6 +201,7 @@ void UGameManager::SpawnLevelTiles()
 		return;
 	}
 
+	TilesLoadedInLevel = 0;
 	FIslandLevel& CurrentIslandLevel = Islands[CurrentIslandID];
 	const TArray<ULevelStreaming*>& StreamedLevels = GetWorld()->GetStreamingLevels();
 	for (size_t idx = 0; idx < CurrentIslandLevel.Grid.Num(); idx++)
@@ -215,9 +217,34 @@ void UGameManager::SpawnLevelTiles()
 
 			LevelInstance->SetShouldBeVisible(true);
 			LevelInstance->SetShouldBeLoaded(true);
+
+			//LevelInstance->OnLevelLoaded.AddDynamic(this, &UGameManager::OnAllTilesLoaded);
+			LevelInstance->OnLevelShown.AddDynamic(this, &UGameManager::OnAllTilesLoaded);
 		}
 	}
 }
+
+void UGameManager::OnAllTilesLoaded()
+{
+	TilesLoadedInLevel++;
+	if (TilesLoadedInLevel != GetGridTiles())
+	{
+		return;
+	}
+
+	// Warn all actors that implements LevelLoaded interface
+	TArray<AActor*> Actors;
+	UGameplayStatics::GetAllActorsWithInterface(GWorld, USLevelLoaded::StaticClass(), Actors);
+	for (auto Actor : Actors)
+	{
+		ISLevelLoaded* LevelLoadedInterface = Cast<ISLevelLoaded>(Actor);
+		if (LevelLoadedInterface)
+		{
+			LevelLoadedInterface->Execute_OnLevelLoaded(Actor);
+		}
+	}
+}
+
 
 FTransform UGameManager::GetBoatSpawnPosition(TArray<ASIsland*> ActorIslands) {
 	for (auto Island : ActorIslands) {
