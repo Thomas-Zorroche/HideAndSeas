@@ -44,12 +44,14 @@ void ASEnemyController::OnPossess(APawn* InPawn)
 	if (!InPawn)
 		return;
 
-	IIsEnemy* SightInterface = Cast<IIsEnemy>(InPawn);
-	if (SightInterface)
-	{
-		EnemyComp = SightInterface->GetEnemyComp();
-		OnEnemyComponentChanged();
-	}
+	//IIsEnemy* SightInterface = Cast<IIsEnemy>(InPawn);
+	//if (SightInterface)
+	//{
+	//	EnemyComp = SightInterface->GetEnemyComp();
+	//	OnEnemyComponentChanged();
+	//}
+
+	OnEnemyComponentChanged();
 
 	if (AIPerception)
 		AIPerception->OnTargetPerceptionUpdated.AddDynamic(this, &ASEnemyController::ActorsPerceptionUpdated);

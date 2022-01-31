@@ -3,6 +3,8 @@
 
 #include "SPatrolPath.h"
 #include "Components/SEnemyComponent.h"
+#include "SPatroller.h"
+#include "SPatrollerController.h"
 
 
 const int ASPatrolPath::MARKERS_COUNT_MAX = 10;
@@ -14,35 +16,66 @@ ASPatrolPath::ASPatrolPath()
 	PrimaryActorTick.bCanEverTick = true;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>("SceneComponent");
-
 	EnemyComp = CreateDefaultSubobject<USEnemyComponent>("EnemyComponent");
+	Patroller = nullptr;
 }
 
-void ASPatrolPath::OnLevelLoaded_Implementation()
+void ASPatrolPath::CreatePatroller()
 {
 	TArray<AActor*> AttachedActors;
 	this->GetAttachedActors(AttachedActors);
-	UE_LOG(LogTemp, Warning, TEXT("Children at start: %d"), AttachedActors.Num());
-
-	// At least two markers in the path
-	if (AttachedActors.Num() == 0)
+	if (AttachedActors.Num() < 2)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ADD MARKERS"));
-		AddMarkerAtLocation(FVector(0, 0, 0));
-		AddMarkerAtLocation(FVector(100, 0, 0));
+		UE_LOG(LogTemp, Error, TEXT("At least 2 markers are needed for the path."));
+		return;
 	}
-	else if (AttachedActors.Num() == 1)
-		AddMarkerAtLocation(FVector(0, 0, 0));
 
-	Update();
-	OnMarkersChanged();
+	FillMarkersLocation(AttachedActors);
+	SpawnPatroller();
+	OnSpawnedPatroller();
 }
 
 
-// Called every frame
-void ASPatrolPath::Tick(float DeltaTime)
+void ASPatrolPath::SpawnPatroller()
 {
-	Super::Tick(DeltaTime);
+	if (MarkersLocation.Num() < 2)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Cannot spawn patroller with less than 2 marker locations."));
+		return; 
+	}
+
+	FActorSpawnParameters SpawnParameters;
+	// Needed to spawn patroller inside his own level streaming
+	SpawnParameters.Owner = this; 
+	auto Actor = GetWorld()->SpawnActor<ASPatroller>(PatrollerClass, MarkersLocation[0], FRotator(EForceInit::ForceInitToZero), SpawnParameters);
+	Patroller = Cast<ASPatroller>(Actor);
+	if (Patroller)
+	{
+		Patroller->SpawnDefaultController();
+		Patroller->EnemyComp = EnemyComp;
+		auto EnemyController = Patroller->GetController();
+		auto PatrollerController = Cast<ASPatrollerController>(EnemyController);
+		if (PatrollerController)
+		{
+			//EnemyController->OnEnemyComponentChanged(); askip c'est appelé tout seul
+			PatrollerController->MarkersLocations = MarkersLocation;
+			PatrollerController->LinkBehaviorTree();
+		}
+	}
+}
+
+void ASPatrolPath::ResetPatroller()
+{
+	Patroller->SpawnDefaultController();
+
+	auto EnemyController = Patroller->GetController();
+	auto PatrollerController = Cast<ASPatrollerController>(EnemyController);
+	if (PatrollerController)
+	{
+		//EnemyController->OnEnemyComponentChanged(); //askip c'est appelé tout seul
+		PatrollerController->MarkersLocations = MarkersLocation;
+		PatrollerController->LinkBehaviorTree();
+	}
 }
 
 #if WITH_EDITOR
@@ -58,7 +91,7 @@ void ASPatrolPath::PostEditChangeProperty(FPropertyChangedEvent& e)
 
 void ASPatrolPath::AddMarkerAtLocation(FVector Location)
 {
-	if (Markers.Num() >= MARKERS_COUNT_MAX)
+	if (MarkersLocation.Num() >= MARKERS_COUNT_MAX)
 		return;
 
 	// Create marker
@@ -66,8 +99,8 @@ void ASPatrolPath::AddMarkerAtLocation(FVector Location)
 	if (Marker)
 	{
 		Marker->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
-		Marker->SetIndex(Markers.Num());
-		Markers.Add(Marker);
+		Marker->SetIndex(MarkersLocation.Num());
+		MarkersLocation.Add(Marker->GetActorLocation());
 	}
 }
 
@@ -76,20 +109,17 @@ void ASPatrolPath::AddMarker()
 	AddMarkerAtLocation();
 }
 
-void ASPatrolPath::Update()
+void ASPatrolPath::FillMarkersLocation(const TArray<AActor*>& AttachedActors)
 {
-	Markers.Empty();
+	MarkersLocation.Empty();
 	int index = 0;
-	TArray<AActor*> AttachedActors;
-	this->GetAttachedActors(AttachedActors);
-	
 	for (auto Child : AttachedActors)
 	{
 		auto Marker = Cast<ASEmptyMarker>(Child);
 		if (Marker)
 		{
 			Marker->SetIndex(index);
-			Markers.Add(Marker);
+			MarkersLocation.Add(Marker->GetActorLocation());
 			index++;
 		}
 	}
@@ -97,13 +127,16 @@ void ASPatrolPath::Update()
 
 TArray<FVector> ASPatrolPath::GetMarkersLocation() const
 {
-	TArray<FVector> Locations;
-	for (auto Marker : Markers)
-	{
-		Locations.Add(Marker->GetActorLocation());
-	}
-	return Locations;
+	//TArray<FVector> Locations;
+	//for (auto Marker : Markers)
+	//{
+	//	Locations.Add(Marker->GetActorLocation());
+	//}
+	//return Locations;
+	return MarkersLocation;
 }
+
+
 
 
 

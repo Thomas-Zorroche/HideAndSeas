@@ -7,6 +7,14 @@
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "SIsland.h"
 #include "Interfaces/SLevelLoaded.h"
+#include "GameFramework/Character.h"
+#include "Engine/LevelBounds.h" 
+
+
+const int UGameManager::SCALE_TILE		     = 100;
+const int UGameManager::LANDSCAPE_GRID_SIZE  = 63 * SCALE_TILE;
+const int UGameManager::TRANSITION_GRID_SIZE = 10 * SCALE_TILE;
+
 
 UGameManager::UGameManager() {
 	Islands = {};
@@ -160,50 +168,51 @@ void UGameManager::InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType> 
 	Grid[x][y] = GetRandomRoom(RoomPath.Last(0), Biome);
 }
 
-float GetWorldLocation(uint8 id, int TRANSITION_GRID_SIZE, int LANDSCAPE_GRID_SIZE)
+float UGameManager::GetWorldLocation(uint8 id)
 {
-
 	if (id % 2 == 0)
 		return (id / 2) * (LANDSCAPE_GRID_SIZE + TRANSITION_GRID_SIZE) + 0.5 * LANDSCAPE_GRID_SIZE;
 	else
 		return ((id / 2) + 1) * LANDSCAPE_GRID_SIZE + (id / 2) * TRANSITION_GRID_SIZE + 0.5 * TRANSITION_GRID_SIZE;
 }
 
-FTransform GetTransformFromGridCoordinates(int idx, int idy)
+FTransform UGameManager::GetTransformFromGridCoordinates(int idx, int idy)
 {
-	static int SCALE = 100;
-	static int LANDSCAPE_GRID_SIZE = 63 * SCALE;
-
 	FTransform Transform;
 
 	// Location (Swap axes because of unreal axis)
-	float WorldLocationX = GetWorldLocation(idy, 10 * SCALE, LANDSCAPE_GRID_SIZE);
-	float WorldLocationY = GetWorldLocation(idx, 10 * SCALE, LANDSCAPE_GRID_SIZE);
+	float WorldLocationX = GetWorldLocation(idy);
+	float WorldLocationY = GetWorldLocation(idx);
 
 	// Rotation
 	if (idx % 2 != 0 && idy % 2 == 0)
 	{
 		FRotator Rotator = { 0, 90, 0 };
 		Transform.SetRotation(Rotator.Quaternion());
-		WorldLocationX += 0.5 * SCALE;
-		WorldLocationY += 0.5 * SCALE;
+		WorldLocationX += 0.5 * SCALE_TILE;
+		WorldLocationY += 0.5 * SCALE_TILE;
 	}
 
 	Transform.SetLocation(FVector(WorldLocationX, WorldLocationY, 0.0f));
 	return Transform;
 }
 
+bool ShouldTileBeVisible(FIntPoint Tile, FIntPoint PlayerTile, int NeighboursCount = 2)
+{
+	return FMath::Abs((int)Tile.X - PlayerTile.Y) <= NeighboursCount
+		&& FMath::Abs((int)Tile.Y - PlayerTile.X) <= NeighboursCount;
+}
+
+// TODO Rename to "LoadLevelTiles"
 void UGameManager::SpawnLevelTiles()
 {
-	if (CurrentIslandID == 255 || CurrentIslandID >= Islands.Num())
-	{
-		UE_LOG(LogTemp, Error, TEXT("Invalid IslandID; %d"), CurrentIslandID);
+	if (!CheckIslandIDValid())
 		return;
-	}
 
-	TilesLoadedInLevel = 0;
+	CurrentPlayerGridCoord = { 2, 2 };
 	FIslandLevel& CurrentIslandLevel = Islands[CurrentIslandID];
 	const TArray<ULevelStreaming*>& StreamedLevels = GetWorld()->GetStreamingLevels();
+	uint8 StreamingLevelID = StreamedLevels.Num();
 	for (size_t idx = 0; idx < CurrentIslandLevel.Grid.Num(); idx++)
 	{
 		for (size_t idy = 0; idy < CurrentIslandLevel.Grid.Num(); idy++)
@@ -215,42 +224,232 @@ void UGameManager::SpawnLevelTiles()
 			auto LevelInstance = StreamingLevel->CreateInstance(UniqueName);
 			LevelInstance->LevelTransform = FTransform(GetTransformFromGridCoordinates(idx, idy));
 
-			LevelInstance->SetShouldBeVisible(true);
-			LevelInstance->SetShouldBeLoaded(true);
+			Tile.StreamingLevelID = StreamingLevelID;
+			// Update StreamingLevelID
+			StreamingLevelID++;
 
-			//LevelInstance->OnLevelLoaded.AddDynamic(this, &UGameManager::OnAllTilesLoaded);
-			LevelInstance->OnLevelShown.AddDynamic(this, &UGameManager::OnAllTilesLoaded);
+			LevelInstance->SetShouldBeLoaded(true);
+			if (ShouldTileBeVisible(FIntPoint(idx, idy), CurrentPlayerGridCoord))
+			{
+				TilesToUpdate.Add(&Tile);	
+				LevelInstance->SetShouldBeVisible(true);
+				LevelInstance->OnLevelShown.AddDynamic(this, &UGameManager::OnTileShown);
+			}
 		}
 	}
 }
 
-void UGameManager::OnAllTilesLoaded()
+
+
+//void UGameManager::OnAllTilesLoaded()
+//{
+//	TilesLoadedInLevel++;
+//	if (TilesLoadedInLevel != 25)
+//	{
+//		return;
+//	}
+//
+//	UE_LOG(LogTemp, Warning, TEXT("ALL TILES LOADED"));
+//
+//	// Event for grid update
+//	GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
+//	FTimerDelegate TimerDel;
+//	FTimerHandle TimerHandle;
+//	TimerDel.BindUFunction(this, FName("UpdateGridVisibility"));
+//	GetTimerManager().SetTimer(TimerHandle, TimerDel, 5.f, true /* loop */);
+//
+//	// Warn all actors that implements LevelLoaded interface
+//	TArray<AActor*> Actors;
+//	UGameplayStatics::GetAllActorsWithInterface(GWorld, USLevelLoaded::StaticClass(), Actors);
+//	for (auto Actor : Actors)
+//	{
+//		ISLevelLoaded* LevelLoadedInterface = Cast<ISLevelLoaded>(Actor);
+//		if (LevelLoadedInterface)
+//		{
+//			LevelLoadedInterface->Execute_OnLevelLoaded(Actor);
+//		}
+//	}
+//}
+
+void UGameManager::OnTileShown()
 {
-	TilesLoadedInLevel++;
-	if (TilesLoadedInLevel != GetGridTiles())
+	TilesShownNum++;
+	// Wait until all tiles are shown (tiles of any type in the TilesToUpdate list)
+	int MaxTiles = OnLevelBegin ? 25 : 10;
+	if (TilesShownNum != MaxTiles)
 	{
 		return;
 	}
 
-	// Warn all actors that implements LevelLoaded interface
-	TArray<AActor*> Actors;
-	UGameplayStatics::GetAllActorsWithInterface(GWorld, USLevelLoaded::StaticClass(), Actors);
-	for (auto Actor : Actors)
-	{
-		ISLevelLoaded* LevelLoadedInterface = Cast<ISLevelLoaded>(Actor);
-		if (LevelLoadedInterface)
+	UE_LOG(LogTemp, Warning, TEXT("TILES UPDATE"));
+
+	// Retrieve only LevelRooms
+	const auto LevelRoomTiles = TilesToUpdate.FilterByPredicate([](FTile* Tile)
 		{
-			LevelLoadedInterface->Execute_OnLevelLoaded(Actor);
+			return Tile->Type == TileType::PT_LEVELROOM;
+		});
+
+
+	// Search if one tile is FirstTimeShow
+	bool NeedToSearchPatrollers = false;
+	for (FTile* Tile : LevelRoomTiles)
+	{
+		if (Tile->FirstTimeShown)
+		{
+			NeedToSearchPatrollers = true;
+			break;
+		}
+	}
+
+	// If there is at least one, find all patrol paths on the map
+	TArray<AActor*> PatrolPaths;
+	if (NeedToSearchPatrollers)
+	{
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASPatrolPath::StaticClass(), PatrolPaths);
+	}
+
+	// Update Tiles
+	for (FTile* Tile : LevelRoomTiles)
+	{
+		if (Tile->FirstTimeShown)
+			Tile->FillPatrollerPaths(PatrolPaths, GetWorld()->GetStreamingLevels());
+		Tile->OnTileShown();
+	}
+
+	// Event for grid update
+	if (OnLevelBegin)
+	{
+		GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
+		FTimerDelegate TimerDel;
+		FTimerHandle TimerHandle;
+		TimerDel.BindUFunction(this, FName("UpdateGridVisibility"));
+		GetTimerManager().SetTimer(TimerHandle, TimerDel, 5.f, true /* loop */);
+
+		// Warn all actors that implements LevelLoaded interface
+		TArray<AActor*> Actors;
+		UGameplayStatics::GetAllActorsWithInterface(GWorld, USLevelLoaded::StaticClass(), Actors);
+		for (auto Actor : Actors)
+		{
+			ISLevelLoaded* LevelLoadedInterface = Cast<ISLevelLoaded>(Actor);
+			if (LevelLoadedInterface)
+			{
+				LevelLoadedInterface->Execute_OnLevelLoaded(Actor);
+			}
+		}
+	}
+
+	// Reset states
+	TilesToUpdate.Empty();
+	TilesShownNum = 0;
+	OnLevelBegin = false;
+}
+
+void UGameManager::GetGridCoordFromWorldLocation(FIntPoint& TileCoord, const FVector& WorldLocation)
+{
+	TileCoord.X = ((int)WorldLocation.X / (LANDSCAPE_GRID_SIZE + TRANSITION_GRID_SIZE)) * 2;
+	TileCoord.Y = ((int)WorldLocation.Y / (LANDSCAPE_GRID_SIZE + TRANSITION_GRID_SIZE)) * 2;
+}
+
+void UGameManager::UpdateGridVisibility()
+{
+	auto Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	if (!Player)
+		return; 
+
+	FIntPoint NewPlayerGridCoord;
+	GetGridCoordFromWorldLocation(NewPlayerGridCoord, Player->GetActorLocation());
+
+	if (NewPlayerGridCoord == CurrentPlayerGridCoord)
+		return;
+
+	CurrentPlayerGridCoord = NewPlayerGridCoord;
+	UE_LOG(LogTemp, Warning, TEXT("UPDATE GRID: NEW TILE : %d , %d"), CurrentPlayerGridCoord.X, CurrentPlayerGridCoord.Y);
+
+	if (!CheckIslandIDValid())
+		return;
+
+	FIslandLevel& CurrentIslandLevel = Islands[CurrentIslandID];
+	const TArray<ULevelStreaming*>& StreamedLevels = GetWorld()->GetStreamingLevels();
+	TilesToUpdate.Empty();
+	for (size_t idx = 0; idx < CurrentIslandLevel.Grid.Num(); idx++)
+	{
+		for (size_t idy = 0; idy < CurrentIslandLevel.Grid.Num(); idy++)
+		{
+			FTile& Tile = CurrentIslandLevel.Grid[idx][idy];
+			ULevelStreaming* StreamingLevel = StreamedLevels[Tile.StreamingLevelID];
+			bool ShouldBeVisible = ShouldTileBeVisible(FIntPoint(idx, idy), CurrentPlayerGridCoord, 2);
+			StreamingLevel->SetShouldBeVisible(ShouldBeVisible);
+			
+			// If a tile is a level room, we need special behavior such as reset patrollers.
+			if (ShouldBeVisible && Tile.Type == TileType::PT_LEVELROOM)
+			{
+				TilesToUpdate.Add(&Tile);
+				UE_LOG(LogTemp, Warning, TEXT("ADD DYNAMIC SL %d"), Tile.StreamingLevelID);
+				//StreamingLevel->OnLevelShown.AddDynamic(this, &UGameManager::OnTileShown);
+			}
 		}
 	}
 }
 
-
-FTransform UGameManager::GetBoatSpawnPosition(TArray<ASIsland*> ActorIslands) {
+FTransform UGameManager::GetBoatSpawnPosition(TArray<ASIsland*> ActorIslands) 
+{
 	for (auto Island : ActorIslands) {
 		if (Island->GetID() == CurrentIslandID) {
 			return Island->ExitTransform;
 		}
 	}
 	return FTransform();
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+
+void FTile::FillPatrollerPaths(TArray<AActor*> Actors, const TArray<ULevelStreaming*>& StreamingLevels)
+{
+	if (Type != TileType::PT_LEVELROOM)
+		return;
+
+	const auto StreamingLevel = StreamingLevels[StreamingLevelID];
+	//FBox TileBox = StreamingLevel->GetStreamingVolumeBounds();
+	FBox TileBox = ALevelBounds::CalculateLevelBounds(StreamingLevel->GetLoadedLevel());
+
+	if (!TileBox.IsValid)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[FillPatrollerPaths] FBox Invalid."));
+		return;
+	}
+
+	// Retrieve all Patroller Paths inside the tile
+	for (auto Actor : Actors)
+	{
+		if (TileBox.IsInsideXY(Actor->GetActorLocation()))
+		{
+			auto PatrolPath = Cast<ASPatrolPath>(Actor);
+			if (PatrolPath)
+			{
+				PatrollerPaths.Add(PatrolPath);
+			}
+		}
+	}
+}
+
+void FTile::OnTileShown()
+{
+	if (Type != TileType::PT_LEVELROOM)
+		return;
+
+	// Create Patrollers
+	for (auto PatrollerPath : PatrollerPaths)
+	{
+		if (FirstTimeShown)
+		{
+			PatrollerPath->CreatePatroller();
+			FirstTimeShown = false;
+		}
+		else
+		{
+			PatrollerPath->ResetPatroller();
+		}
+	}
 }

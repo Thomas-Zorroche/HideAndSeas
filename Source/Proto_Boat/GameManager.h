@@ -4,11 +4,11 @@
 
 #include "./ProceduralLevels/SRoomTemplate.h"
 #include "./Utility.h"
-
 #include "Runtime/Engine/Classes/Engine/LevelStreaming.h"
-
+#include "Math/IntPoint.h" 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "SPatrolPath.h"
 #include "GameManager.generated.h"
 
 
@@ -26,6 +26,15 @@ public:
 
 	// ID in the GetWorld().StreamingLevels
 	uint8 StreamingLevelID;
+
+	// True first time the level streaming is shown. False after. 
+	bool FirstTimeShown = true;
+
+	TArray<ASPatrolPath*> PatrollerPaths;
+
+	void FillPatrollerPaths(TArray<AActor*> Actors, const TArray<ULevelStreaming*>& StreamingLevels);
+
+	void OnTileShown();
 };
 
 
@@ -95,6 +104,7 @@ public:
 		return  static_cast<BiomeType>(FMath::RandRange(0, (int)BiomeType::MAX - 1));
 	}
 
+
 public:
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FIslandLevel> Islands;
@@ -112,18 +122,53 @@ private:
 	int GetGridWidth() const { return (ROOM_COUNT * 2) + 3; };
 	int GetGridTiles() const { return GetGridWidth() * GetGridWidth(); };
 
+	//UFUNCTION()
+	//void OnAllTilesLoaded();
+
 	UFUNCTION()
-	void OnAllTilesLoaded();
+	void OnTileShown();
+
+	UFUNCTION()
+	void UpdateGridVisibility();
+
+	void GetGridCoordFromWorldLocation(FIntPoint& TileCoord, const FVector& WorldLocation);
+
+	float GetWorldLocation(uint8 id);
+	FTransform GetTransformFromGridCoordinates(int idx, int idy);
+
+	bool CheckIslandIDValid()
+	{
+		if (CurrentIslandID == 255 || CurrentIslandID >= Islands.Num())
+		{
+			UE_LOG(LogTemp, Error, TEXT("Invalid IslandID; %d"), CurrentIslandID);
+			return false;
+		}
+		return true;
+	}
 
 private:
 	bool PoolInitialized = false;
 
 	TMap< TileType, TArray<FTile> > TilesPool;
 
+	TArray<FTile*> TilesToUpdate;
+
 	// Number of rooms in a level island (including start and end rooms)
 	const int ROOM_COUNT = 6;
 
-	int TilesLoadedInLevel = 0;
+	FIntPoint CurrentPlayerGridCoord;
+
+	static const int SCALE_TILE;
+	static const int LANDSCAPE_GRID_SIZE;
+	static const int TRANSITION_GRID_SIZE;
+
+
+	/*
+	* Move this in another class
+	*/
+	int TilesShownNum = 0;
+	bool OnLevelBegin = true;
+
 };
 
 

@@ -29,6 +29,8 @@ public:
 
 	virtual class USEnemyComponent* GetEnemyComp() override;
 
+	void OnTileReload();
+
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class USEnemyComponent* EnemyComp;
