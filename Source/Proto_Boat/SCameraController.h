@@ -24,9 +24,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void InitializeDirection(const FVector& Dir);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "SCameraController")
-	void OnReachMaxAngle();
-
 protected:
 	UPROPERTY(BlueprintReadWrite)
 	FVector OriginDirection;

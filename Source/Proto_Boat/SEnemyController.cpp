@@ -48,7 +48,10 @@ void ASEnemyController::OnPossess(APawn* InPawn)
 	if (SightInterface)
 	{
 		EnemyComp = SightInterface->GetEnemyComp();
-		OnEnemyComponentChanged();
+
+		SightConfig->SightRadius = EnemyComp->SightRadius;
+		SightConfig->LoseSightRadius = 2000.f;
+		SightConfig->PeripheralVisionAngleDegrees = EnemyComp->SightAngle;
 	}
 
 	if (AIPerception)
@@ -64,40 +67,19 @@ void ASEnemyController::OnUnPossess()
 	Super::OnUnPossess();
 }
 
-void ASEnemyController::OnEnemyComponentChanged()
-{
-	IIsEnemy* SightInterface = Cast<IIsEnemy>(GetPawn());
-	if (SightInterface)
-	{
-		EnemyComp = SightInterface->GetEnemyComp();
-	}
-
-	UpdateSightConfig();
-}
-
 void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
-	ASTopDownCharacter* Player = nullptr;
-	Player = Cast<ASTopDownCharacter>(Actor);
-
-	if (!Player)
-		return;
-
-	//double DistanceToPlayer = FVector::DistSquaredXY(GetPawn()->GetActorLocation(), Player->GetActorLocation());
-	//if (DistanceToPlayer > SightConfig->SightRadius)
-	//	return;
-
-
-	UE_LOG(LogTemp, Error, TEXT("Angle: %f"), SightConfig->PeripheralVisionAngleDegrees);
+	ASTopDownCharacter* player = nullptr;
+	player = Cast<ASTopDownCharacter>(Actor);
 
 	switch (State)
 	{
 		case AIState::PATROL:
-			if (Player->isVisible)
+			if (player != NULL && player->isVisible)
 				SetAIState(AIState::ALERT);
 			break;
 		case AIState::SEARCH:
-			if (Player->isVisible)
+			if (player != NULL && player->isVisible)
 				SetAIState(AIState::ALERT);
 			break;
 		case AIState::ALERT:	SetAIState(AIState::SEARCH); break;
@@ -118,8 +100,6 @@ void ASEnemyController::SetAIState(AIState NewState)
 		auto PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 		if (Blackboard && PlayerController)
 			Blackboard->SetValueAsObject("TargetActor", PlayerController);
-
-		OnAttack();
 	}
 
 	// Set State to Blackboard
@@ -193,25 +173,6 @@ void ASEnemyController::DecreaseAlertLevel(float DeltaTime)
 	OnLightLevelChanged(CurrentLightIntensity);
 }
 
-void ASEnemyController::UpdateSightConfig()
-{
-	FAISenseID Id = UAISense::GetSenseID(UAISense_Sight::StaticClass());
-
-	if (!Id.IsValid())
-	{
-		UE_LOG(LogTemp, Error, TEXT("Wrong Sense ID"));
-		return;
-	}
-
-	auto Config = AIPerception->GetSenseConfig(Id);
-	if (Config == nullptr)
-		return;
-
-	auto ConfigSight = Cast<UAISenseConfig_Sight>(Config);
-
-	ConfigSight->SightRadius = EnemyComp->SightRadius;
-	ConfigSight->LoseSightRadius = EnemyComp->SightRadius;
-	ConfigSight->PeripheralVisionAngleDegrees = EnemyComp->SightAngle;
-
-	AIPerception->RequestStimuliListenerUpdate();
+void ASEnemyController::SetAlertLevel(const float NewAlertLevel) {
+	AlertLevel = NewAlertLevel;
 }

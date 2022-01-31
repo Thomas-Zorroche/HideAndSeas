@@ -17,20 +17,17 @@ void ASCameraController::Tick(float DeltaTime)
 
 void ASCameraController::UpdateDirection(float DeltaTime)
 {
-	if (!PawnFixe && State == AIState::PATROL)
+	if (State == AIState::PATROL)
 	{
 		CurrentAngle += (DeltaTime * EnemyComp->Speed) * Sign;
 
 		if (FMath::Abs(CurrentAngle) > EnemyComp->CameraPatrolAngle)
-		{
-			CurrentAngle = EnemyComp->CameraPatrolAngle * Sign;
 			Sign *= -1.0f;
-			PawnFixe = true;
-			OnReachMaxAngle();
-		}
 
 		CurrentDirection = OriginDirection.RotateAngleAxis(CurrentAngle, FVector(0.0f, 0.0f, 1.0f));
 	}
+	
+
 }
 
 void ASCameraController::InitializeDirection(const FVector& Dir)

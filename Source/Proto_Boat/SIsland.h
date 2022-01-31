@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/SphereComponent.h" 
 
 #include "SIsland.generated.h"
 
@@ -23,4 +24,8 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+private:
+	UPROPERTY(EditAnywhere)
+	USphereComponent* SphereCollision;
 };

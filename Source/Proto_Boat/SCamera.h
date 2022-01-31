@@ -31,6 +31,6 @@ public:
 
 
 public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere)
 	class USEnemyComponent* EnemyComp;
 };
