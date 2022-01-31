@@ -46,6 +46,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
 	void OnAttack();
 
+	UFUNCTION(BlueprintCallable)
+	void SetAlertLevel(const float NewAlertLevel);
+
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 

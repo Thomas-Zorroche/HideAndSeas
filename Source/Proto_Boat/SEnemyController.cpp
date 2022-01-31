@@ -105,6 +105,10 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 	}
 }
 
+void ASEnemyController::SetAlertLevel(const float NewAlertLevel) {
+	AlertLevel = NewAlertLevel;
+}
+
 void ASEnemyController::SetAIState(AIState NewState)
 {
 	if (NewState == State)
