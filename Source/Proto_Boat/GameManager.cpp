@@ -3,112 +3,254 @@
 
 #include "./GameManager.h"
 #include "./SProceduralRoom.h"
-#include "Runtime/Engine/Classes/Engine/LevelStreaming.h"
+#include "Engine/LevelStreaming.h" 
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
+#include "SIsland.h"
+#include "Interfaces/SLevelLoaded.h"
 
 UGameManager::UGameManager() {
-	StreamingLevels = {};
-	PoolOfRoom = {};
 	Islands = {};
+	TilesPool = {};
+
+	TilesPool.Add(TileType::NPT_LANDSCAPE, {});
+	TilesPool.Add(TileType::NPT_SQUARE, {});
+	TilesPool.Add(TileType::NPT_TRANSITION, {});
+	TilesPool.Add(TileType::PT_LEVELROOM, {});
+	TilesPool.Add(TileType::PT_TRANSITION, {});
 }
 
-void UGameManager::GetStreamingLevels() {
-	const TArray<ULevelStreaming*>& streamedLevels = GetWorld()->GetStreamingLevels();
-	for (ULevelStreaming* streamingLevel : streamedLevels) {
-		FString levelName = streamingLevel->GetWorldAssetPackageName();
-		UE_LOG(LogTemp, Warning, TEXT("****** LEVEL NAME : %s"), *levelName);
+// Retrieve all streaming levels from "LoadTiles" Map
+void UGameManager::InitializeTilesPool() {
+	const TArray<ULevelStreaming*>& StreamedLevels = GetWorld()->GetStreamingLevels();
 
-		streamingLevel->SetShouldBeLoaded(true);
-		streamingLevel->SetShouldBeVisible(true);
-		StreamingLevels.Add(streamingLevel);
+	uint8 StreamingLevelID = 0;
+	for (ULevelStreaming* StreamingLevel : StreamedLevels) {
+		FString LevelName = StreamingLevel->GetWorldAssetPackageName();
+		
+		// Add a tile in the pool
+		TileType Type = FindTileTypeFromLevelName(LevelName);
+		auto Tiles = TilesPool.Find(Type);
+		Tiles->Add(FTile(Type, LevelName, StreamingLevelID));
+		
+		StreamingLevelID++;
 	}
+
 }
 
-bool UGameManager::AreLevelsShowned() {
-	if (PoolInitialized)
-		return false;
-	for (ULevelStreaming* streamingLevel : StreamingLevels) {
-		if (!streamingLevel->IsLevelVisible())
-			return false;
-	}
-	UE_LOG(LogTemp, Warning, TEXT("levels shown"));
-	return true;
+TileType UGameManager::FindTileTypeFromLevelName(const FString& LevelName) const
+{
+	if (LevelName.Contains("NPT_Transition"))	return TileType::NPT_TRANSITION;
+	if (LevelName.Contains("PT_Transition"))	return TileType::PT_TRANSITION;
+	if (LevelName.Contains("Landscape"))		return TileType::NPT_LANDSCAPE;
+	if (LevelName.Contains("Square"))			return TileType::NPT_SQUARE;
+	else										return TileType::PT_LEVELROOM;
 }
 
-void UGameManager::InitializeRoomsPool() {
-	for (ULevelStreaming* streamingLevel : StreamingLevels) {
-		ASProceduralRoom* room = Cast<ASProceduralRoom>(streamingLevel->GetLevelScriptActor());
-		if (room) {
-			FSRoomTemplate roomTemplate(streamingLevel->GetWorldAssetPackageFName(), room->GetExitTransform().GetLocation());
-			PoolOfRoom.Add(roomTemplate);
-		}
-		UE_LOG(LogTemp, Warning, TEXT("room template"));
-	}
-	PoolInitialized = true;
-}
-
-void UGameManager::GenerateIslands(TArray<FVector> IslandLocations, bool IsMaritime) {
-
-	for (auto location : IslandLocations) {
-		auto level = FIslandLevel(location, GetRandomBiomeType(), IsMaritime) ;
+void UGameManager::GenerateIslands(TArray<ASIsland*> IslandActors, bool IsMaritime) {
+	for (auto Island : IslandActors) {
+		auto level = FIslandLevel(Island->GetActorLocation(), GetRandomBiomeType(), IsMaritime);
 		InitializeIslandLevel(level);
 		Islands.Add(level);
-	}
 
+		Island->SetID(Islands.Num() - 1);
+	}
 }
 
+
+FTile UGameManager::GetRandomTile(TileType TileType, BiomeType Biome) {
+	// Get tiles
+	auto RoomTiles = TilesPool.Find(TileType);
+
+	// Get only tiles with the right biome
+	auto FilteredRoomTiles = RoomTiles->FilterByPredicate([Biome](const FTile Tile) {
+		return CheckBiomeFromLevelName(Tile.LevelName, Biome);
+	});
+
+	// Pick a random tile from the FilteredRoomTiles
+	int RandomIndex = FMath::RandRange(0, FilteredRoomTiles.Num() - 1);
+	FTile RandomTile = FilteredRoomTiles[RandomIndex];
+
+	// Return ID of TilesPool[TileType::LEVELROOM] 
+	//return RoomTiles->IndexOfByKey(RandomTile);
+	return FTile(TileType, RandomTile.LevelName, RandomTile.StreamingLevelID);
+}
 
 // Find Random room from pool room that is roomtype and biometype, return the index in the PoolOfRooms
-int UGameManager::GetRandomRoom(RoomType roomType, BiomeType biome) {
-	TArray<int> FilteredPool = FilterByBiomeAndType(biome, roomType);
-	if (FilteredPool.Num() == 0) {
-		UE_LOG(LogTemp, Warning, TEXT("Filtered Pool is Empty : there is no room with this type and this biome"));
-		return -1;
-	}
+FTile UGameManager::GetRandomRoom(RoomType RoomType, BiomeType Biome) {
+	// Get level room tiles
+	auto RoomTiles = TilesPool.Find(TileType::PT_LEVELROOM);
 
-	return FilteredPool[FMath::RandRange(0, FilteredPool.Num()-1)];
+	// Get only level room with the right biome and type
+	auto FilteredRoomTiles = RoomTiles->FilterByPredicate([Biome, RoomType](const FTile Tile) {
+		return CheckBiomeAndRoomTypeFromLevelName(Tile.LevelName, Biome, RoomType);
+	});
+
+	// Pick a random room from the FilteredRoomTiles
+	int RandomIndex = FMath::RandRange(0, FilteredRoomTiles.Num() - 1);
+	FTile RandomTile = FilteredRoomTiles[RandomIndex];
+
+	// Return ID of TilesPool[TileType::LEVELROOM] 
+	//return RoomTiles->IndexOfByKey(RandomTile);
+	return FTile(TileType::PT_LEVELROOM, RandomTile.LevelName, RandomTile.StreamingLevelID);;
 }
 
-TArray<int> UGameManager::FilterByBiomeAndType(BiomeType biome, RoomType roomType) const{
-	TArray<int> indices = {};
-	for (int i = 0; i < PoolOfRoom.Num(); i++) {
-		auto biomtype = PoolOfRoom[i].GetBiomeType();
-		auto roomtype = PoolOfRoom[i].GetRoomType();
-		if (biomtype == biome && roomtype == roomType)
-			indices.Add(i);
-	}
-
-	return indices;
-}
 
 void UGameManager::InitializeIslandLevel(FIslandLevel& level) {
-	// Generate Level (Rooms)
-	FVector nextLocation = FVector(0.0f);
-	int i = 0;
+	// Generate Path of RoomType
+	TArray<RoomType> RoomPath = {};
 
-	// Create Start room
-	int id = GetRandomRoom(RoomType::START, level.Biome);
- 	level.Rooms.Add(FRoomInLevel(id, nextLocation));
-
-	nextLocation += PoolOfRoom[level.Rooms[i].PoolIndex].ExitPosition;
-	RoomType previousRoomType = RoomType::START;
-	i++;
+	// Start
+	RoomType PreviousRoomType = FMath::RandRange(0, 1) == 0 ? RoomType::START_Y : RoomType::START_X;
+	RoomPath.Add(PreviousRoomType);
+	level.FinishedStates.Add(true);
 
 	// In between Rooms
-	for (; i < 6 - 1; i++) {
-		previousRoomType = GetRandomRoomType(previousRoomType);
-		level.Rooms.Add(FRoomInLevel(GetRandomRoom(previousRoomType, level.Biome), nextLocation));
-		nextLocation += PoolOfRoom[level.Rooms[i].PoolIndex].ExitPosition;
+	for (int i = 1; i < ROOM_COUNT - 1; i++) {
+		level.FinishedStates.Add(false);
+		RoomType NextRoomType = GetRandomRoomType(PreviousRoomType);
+		RoomPath.Add(NextRoomType);
+		PreviousRoomType = NextRoomType;
 	}
 
-	// Create n-1 room
-	previousRoomType = IsExitOnYAxis(previousRoomType) ? RoomType::LEFTTOBACK : RoomType::BACKTOFRONT;
-	level.Rooms.Add(FRoomInLevel(GetRandomRoom(previousRoomType, level.Biome), nextLocation));
-	nextLocation += PoolOfRoom[level.Rooms[i].PoolIndex].ExitPosition;
-
-	i++;
-
 	// Create End Room
-	level.Rooms.Add(FRoomInLevel(GetRandomRoom(RoomType::END, level.Biome), nextLocation));
+	level.FinishedStates.Add(false);
+	RoomPath.Add(GetRandomEndType(PreviousRoomType));
 
+	// Initialize Grid
+	InitializeGrid(level.Grid, RoomPath, level.Biome);
+}
+
+void UGameManager::InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType> RoomPath, BiomeType Biome) {
+	// Initialize Grid Content with all NPT
+	Grid.Init(TArray<FTile>(), GetGridWidth());
+	for (int x = 0; x < GetGridWidth(); x++) {
+		Grid[x].Init(FTile(), GetGridWidth());
+		for (int y = 0; y < GetGridWidth(); y++) {
+			//FVector2D CurrentCoord(x, y);
+			if (x % 2 != 0 && y % 2 != 0)
+				Grid[x][y] = GetRandomTile(TileType::NPT_SQUARE, Biome);
+			else if (x % 2 != 0 || y % 2 != 0)
+				Grid[x][y] = GetRandomTile(TileType::NPT_TRANSITION, Biome);
+			else if (x % 2 == 0 && y % 2 == 0)
+				Grid[x][y] = GetRandomTile(TileType::NPT_LANDSCAPE, Biome);
+		}
+	}
+
+	// Update Tiles along Path coord to be Playable Tiles (Rooms and Transitions)
+	FVector2D PreviousCoord = FVector2D(2, 2);
+	Grid[PreviousCoord.X][PreviousCoord.Y] = GetRandomRoom(RoomPath[0], Biome);
+	FVector2D StartTransitionCoord = GetTransitionCoordinate(RoomPath[0], PreviousCoord);
+	Grid[StartTransitionCoord.X][StartTransitionCoord.Y] = GetRandomTile(TileType::PT_TRANSITION, Biome);
+
+	for (int i = 0; i < RoomPath.Num() - 2; i++) {
+		RoomType PreviousRoomType = RoomPath[i];
+		RoomType NextRoomType = RoomPath[i+1];
+		FVector2D NextCoord = GetNextCoordinate(PreviousRoomType, PreviousCoord);
+		FVector2D PTTransitionCoord = GetTransitionCoordinate(NextRoomType, NextCoord);
+		auto x = NextCoord.X;
+		auto y = NextCoord.Y;
+		Grid[NextCoord.X][NextCoord.Y] = GetRandomRoom(NextRoomType, Biome);
+		Grid[PTTransitionCoord.X][PTTransitionCoord.Y] = GetRandomTile(TileType::PT_TRANSITION, Biome);
+		PreviousCoord = NextCoord;
+	}
+
+	FVector2D NextCoord = GetNextCoordinate(RoomPath.Last(1) /* avant dernier */, PreviousCoord);
+	int x = NextCoord.X;
+	int y = NextCoord.Y;
+	Grid[x][y] = GetRandomRoom(RoomPath.Last(0), Biome);
+}
+
+float GetWorldLocation(uint8 id, int TRANSITION_GRID_SIZE, int LANDSCAPE_GRID_SIZE)
+{
+
+	if (id % 2 == 0)
+		return (id / 2) * (LANDSCAPE_GRID_SIZE + TRANSITION_GRID_SIZE) + 0.5 * LANDSCAPE_GRID_SIZE;
+	else
+		return ((id / 2) + 1) * LANDSCAPE_GRID_SIZE + (id / 2) * TRANSITION_GRID_SIZE + 0.5 * TRANSITION_GRID_SIZE;
+}
+
+FTransform GetTransformFromGridCoordinates(int idx, int idy)
+{
+	static int SCALE = 100;
+	static int LANDSCAPE_GRID_SIZE = 63 * SCALE;
+
+	FTransform Transform;
+
+	// Location (Swap axes because of unreal axis)
+	float WorldLocationX = GetWorldLocation(idy, 10 * SCALE, LANDSCAPE_GRID_SIZE);
+	float WorldLocationY = GetWorldLocation(idx, 10 * SCALE, LANDSCAPE_GRID_SIZE);
+
+	// Rotation
+	if (idx % 2 != 0 && idy % 2 == 0)
+	{
+		FRotator Rotator = { 0, 90, 0 };
+		Transform.SetRotation(Rotator.Quaternion());
+		WorldLocationX += 0.5 * SCALE;
+		WorldLocationY += 0.5 * SCALE;
+	}
+
+	Transform.SetLocation(FVector(WorldLocationX, WorldLocationY, 0.0f));
+	return Transform;
+}
+
+void UGameManager::SpawnLevelTiles()
+{
+	if (CurrentIslandID == 255 || CurrentIslandID >= Islands.Num())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid IslandID; %d"), CurrentIslandID);
+		return;
+	}
+
+	TilesLoadedInLevel = 0;
+	FIslandLevel& CurrentIslandLevel = Islands[CurrentIslandID];
+	const TArray<ULevelStreaming*>& StreamedLevels = GetWorld()->GetStreamingLevels();
+	for (size_t idx = 0; idx < CurrentIslandLevel.Grid.Num(); idx++)
+	{
+		for (size_t idy = 0; idy < CurrentIslandLevel.Grid.Num(); idy++)
+		{
+			FTile& Tile = CurrentIslandLevel.Grid[idx][idy];
+			ULevelStreaming* StreamingLevel = StreamedLevels[Tile.StreamingLevelID];
+			FString UniqueName = "Tile" + FString::FromInt(idx) + "_" + FString::FromInt(idy);
+
+			auto LevelInstance = StreamingLevel->CreateInstance(UniqueName);
+			LevelInstance->LevelTransform = FTransform(GetTransformFromGridCoordinates(idx, idy));
+
+			LevelInstance->SetShouldBeVisible(true);
+			LevelInstance->SetShouldBeLoaded(true);
+
+			//LevelInstance->OnLevelLoaded.AddDynamic(this, &UGameManager::OnAllTilesLoaded);
+			LevelInstance->OnLevelShown.AddDynamic(this, &UGameManager::OnAllTilesLoaded);
+		}
+	}
+}
+
+void UGameManager::OnAllTilesLoaded()
+{
+	TilesLoadedInLevel++;
+	if (TilesLoadedInLevel != GetGridTiles())
+	{
+		return;
+	}
+
+	// Warn all actors that implements LevelLoaded interface
+	TArray<AActor*> Actors;
+	UGameplayStatics::GetAllActorsWithInterface(GWorld, USLevelLoaded::StaticClass(), Actors);
+	for (auto Actor : Actors)
+	{
+		ISLevelLoaded* LevelLoadedInterface = Cast<ISLevelLoaded>(Actor);
+		if (LevelLoadedInterface)
+		{
+			LevelLoadedInterface->Execute_OnLevelLoaded(Actor);
+		}
+	}
+}
+
+
+FTransform UGameManager::GetBoatSpawnPosition(TArray<ASIsland*> ActorIslands) {
+	for (auto Island : ActorIslands) {
+		if (Island->GetID() == CurrentIslandID) {
+			return Island->ExitTransform;
+		}
+	}
+	return FTransform();
 }

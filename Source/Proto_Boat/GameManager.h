@@ -3,7 +3,7 @@
 #pragma once
 
 #include "./ProceduralLevels/SRoomTemplate.h"
-//#include "./ProceduralLevels/SLevelIsland.h"
+#include "./Utility.h"
 
 #include "Runtime/Engine/Classes/Engine/LevelStreaming.h"
 
@@ -11,20 +11,23 @@
 #include "Engine/GameInstance.h"
 #include "GameManager.generated.h"
 
+
 USTRUCT(BlueprintType)
-struct FRoomInLevel {
+struct FTile
+{
 	GENERATED_BODY()
 
 public:
-	// Index in GameManager PoolOfRoom, corresponding to the RoomTemplate to spawn
-	int PoolIndex;
+	FTile(TileType Type = TileType::PT_LEVELROOM, FString Name = "", uint8 slID = 0)
+		: Type(Type), LevelName(Name), StreamingLevelID(slID) {}
 
-	FVector WorldPosition;
-	bool IsFinished;
-	FRoomInLevel() {};
-	FRoomInLevel(int poolIndex, FVector position, bool isFinished = false)
-		: PoolIndex(poolIndex), WorldPosition(position), IsFinished(isFinished) {}
+	TileType Type;
+	FString LevelName;
+
+	// ID in the GetWorld().StreamingLevels
+	uint8 StreamingLevelID;
 };
+
 
 USTRUCT(BlueprintType)
 struct FIslandLevel {
@@ -32,18 +35,22 @@ struct FIslandLevel {
 
 public:
 	FIslandLevel() {};
+	//  [TO DO] : Lorsqu'on aura assez de tiles changer la valeur du biome entrée en dur...
 	FIslandLevel(FVector worldPosition, BiomeType biome, bool isMaritime, bool isFinished = false)
-		: Rooms({}), WorldPosition(worldPosition), Biome(BiomeType::FOREST), IsFinished(isFinished), IsMaritime(isMaritime) {}
+		:WorldPosition(worldPosition), Biome(BiomeType::FOREST /* biome */), IsFinished(isFinished), IsMaritime(isMaritime) {}
 	// FVector GetWorldPosition() const { return WorldPosition; }
 
-	TArray<FRoomInLevel> Rooms;
+	//TArray<FRoomInLevel> Rooms;
 	FVector WorldPosition;
+
+	TArray<bool> FinishedStates;
 
 	BiomeType Biome;
 	bool IsFinished = false;
 	bool IsMaritime;
 
-	static int const LEVELSIZE = 6;
+	TArray<TArray<FTile>> Grid;
+
 };
 
 
@@ -53,48 +60,94 @@ class PROTO_BOAT_API UGameManager : public UGameInstance
 	GENERATED_BODY()
 public:
 	UGameManager();
-	UFUNCTION(BlueprintCallable, Category = "Custom")
-	void GetStreamingLevels();
 
-	UFUNCTION(BlueprintCallable, Category = "Custom")
-	bool AreLevelsShowned();
-
-	UFUNCTION(BlueprintCallable, Category = "Custom")
-	void InitializeRoomsPool();
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly)
-	TArray<FSRoomTemplate> PoolOfRoom;
-
-	// TODO remove pointers
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<FIslandLevel> Islands;
-
-	TArray< ULevelStreaming* > StreamingLevels;
-
-	const TArray<FIslandLevel>& GetIslandLevels() const { return Islands; }
+	/////////////////////////////////////////////////////////////////////////////////
 	
-	UFUNCTION(BlueprintCallable, Category = "Custom")
+	// Create a Tiles Pool
+	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	void InitializeTilesPool();
+
+	// Create Islands Level Data
+	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	void GenerateIslands(TArray<class ASIsland*> Islands, bool IsMaritime);
+
+	// Spawn Tiles inside a Island Level
+	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	void SpawnLevelTiles();
+	
+	/////////////////////////////////////////////////////////////////////////////////
+	
+	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	FTransform GetBoatSpawnPosition(TArray<ASIsland*> Islands);
+
+	UFUNCTION(BlueprintCallable, Category = "GameManager")
 	bool HasIslandLevels() const { return Islands.Num() > 0; }
 
+	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	bool IsTilesPoolNotEmpty() const { return TilesPool.Find(TileType::NPT_LANDSCAPE)->Num() > 0; }
 
-	// Return index
-	//int AddIslandLevel(FVector, biome, isMaritime);
+	const TArray<FIslandLevel>& GetIslandLevels() const { return Islands; }
+
+	FTile GetRandomRoom(RoomType roomType, BiomeType biome);
+	FTile GetRandomTile(TileType TileType, BiomeType biome);
 
 	static BiomeType GetRandomBiomeType() {
 		return  static_cast<BiomeType>(FMath::RandRange(0, (int)BiomeType::MAX - 1));
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Custom")
-	void GenerateIslands(TArray<FVector> IslandLocations, bool IsMaritime);
-
-	int GetRandomRoom(RoomType roomType, BiomeType biome);
-
-	TArray<int> FilterByBiomeAndType(BiomeType biome, RoomType roomType) const;
+public:
+	UPROPERTY(BlueprintReadOnly)
+	TArray<FIslandLevel> Islands;
+	
+	UPROPERTY(BlueprintReadWrite)
+	uint8 CurrentIslandID = 255;
 
 private:
-	void InitializeIslandLevel(FIslandLevel& level);
+	TileType FindTileTypeFromLevelName(const FString& LevelName) const;
 
-	bool PoolInitialized = false;
+	void InitializeIslandLevel(FIslandLevel& level);
 	
+	void InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType> RoomPath, BiomeType Biome);
+
+	int GetGridWidth() const { return (ROOM_COUNT * 2) + 3; };
+	int GetGridTiles() const { return GetGridWidth() * GetGridWidth(); };
+
+	UFUNCTION()
+	void OnAllTilesLoaded();
+
+private:
+	bool PoolInitialized = false;
+
+	TMap< TileType, TArray<FTile> > TilesPool;
+
+	// Number of rooms in a level island (including start and end rooms)
+	const int ROOM_COUNT = 6;
+
+	int TilesLoadedInLevel = 0;
 };
 
+
+// Return Coordinates of the next Room in path depending on the current RoomType and coordinates
+inline FVector2D GetNextCoordinate(RoomType RoomType, FVector2D Coordinates) {
+	if (RoomType == RoomType::LEFTTOBACK || RoomType == RoomType::BACKTOFRONT || RoomType == RoomType::START_X) return Coordinates + FVector2D(0, 2);
+	if (RoomType == RoomType::FRONTTORIGHT || RoomType == RoomType::RIGHTTOLEFT || RoomType == RoomType::START_Y ) return Coordinates + FVector2D(2, 0);
+	else return Coordinates;
+}
+
+// Return Coordinates of the Playable Transition between current and next Room depending on the current RoomType and coordinates
+inline FVector2D GetTransitionCoordinate(RoomType RoomType, FVector2D Coordinates) {
+	if (RoomType == RoomType::LEFTTOBACK || RoomType == RoomType::BACKTOFRONT || RoomType == RoomType::START_X) return Coordinates + FVector2D(0, 1);
+	if (RoomType == RoomType::FRONTTORIGHT || RoomType == RoomType::RIGHTTOLEFT || RoomType == RoomType::START_Y) return Coordinates + FVector2D(1, 0);
+	else return Coordinates;
+}
+
+
+inline bool CheckBiomeAndRoomTypeFromLevelName(const FString& Name, BiomeType Biome, RoomType RoomType)
+{
+	return Name.Contains(GetBiomeTypeStr(Biome)) && Name.Contains(GetRoomTypeStr(RoomType));
+}
+
+inline bool CheckBiomeFromLevelName(const FString& Name, BiomeType Biome)
+{
+	return Name.Contains(GetBiomeTypeStr(Biome));
+}

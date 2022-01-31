@@ -12,12 +12,12 @@ ASProceduralLevel::ASProceduralLevel()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-    Rooms.Add(RoomType::START, {});
-    Rooms.Add(RoomType::END, {});
-    Rooms.Add(RoomType::BACKTOFRONT, {});
-    Rooms.Add(RoomType::RIGHTTOLEFT, {});
-    Rooms.Add(RoomType::LEFTTOBACK, {});
-    Rooms.Add(RoomType::FRONTTORIGHT, {});
+    //Rooms.Add(RoomType::START, {});
+    //Rooms.Add(RoomType::END, {});
+    //Rooms.Add(RoomType::BACKTOFRONT, {});
+    //Rooms.Add(RoomType::RIGHTTOLEFT, {});
+    //Rooms.Add(RoomType::LEFTTOBACK, {});
+    //Rooms.Add(RoomType::FRONTTORIGHT, {});
 }
 
 void ASProceduralLevel::SortAllLevel() {
@@ -29,11 +29,11 @@ void ASProceduralLevel::SortAllLevel() {
     {
         // Sort all sub Levels
         FString levelName = streamingLevel->GetWorldAssetPackageName();
-        if (levelName.Contains(TEXT("Start"))) 
-            Rooms.Find(RoomType::START)->Rooms.Add(streamingLevel);
-        else if (levelName.Contains(TEXT("End"))) 
-            Rooms.Find(RoomType::END)->Rooms.Add(streamingLevel);
-        else if (levelName.Contains(TEXT("FtB")))
+        //if (levelName.Contains(TEXT("Start"))) 
+        //    Rooms.Find(RoomType::START)->Rooms.Add(streamingLevel);
+        //else if (levelName.Contains(TEXT("End"))) 
+        //    Rooms.Find(RoomType::END)->Rooms.Add(streamingLevel);
+        if (levelName.Contains(TEXT("FtB")))
             Rooms.Find(RoomType::BACKTOFRONT)->Rooms.Add(streamingLevel);
         else if (levelName.Contains(TEXT("LtR"))) 
             Rooms.Find(RoomType::RIGHTTOLEFT)->Rooms.Add(streamingLevel);

@@ -6,11 +6,11 @@
 #include "GameFramework/Actor.h"
 #include "Components/SphereComponent.h" 
 #include "SEmptyMarker.h"
-
+#include "Interfaces/SLevelLoaded.h"
 #include "SPatrolPath.generated.h"
 
 UCLASS()
-class PROTO_BOAT_API ASPatrolPath : public AActor
+class PROTO_BOAT_API ASPatrolPath : public AActor, public ISLevelLoaded
 {
 	GENERATED_BODY()
 	
@@ -23,8 +23,8 @@ public:
 #endif
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	//// Called when the game starts or when spawned
+	//virtual void BeginPlay() override;
 
 public:	
 	// Called every frame
@@ -43,9 +43,11 @@ public:
 	void OnMarkersChanged();
 
 
-private:
-	virtual void Destroyed() override;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Broadcast")
+		void OnLevelLoaded();  // This is the prototype declared in the interface
+	virtual void OnLevelLoaded_Implementation() override; // This is the declaration of the implementation
 
+private:
 	void AddMarkerAtLocation(FVector Location = FVector(0, 0, 0));
 
 public:

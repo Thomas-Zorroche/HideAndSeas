@@ -83,13 +83,6 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 	if (!Player)
 		return;
 
-	//double DistanceToPlayer = FVector::DistSquaredXY(GetPawn()->GetActorLocation(), Player->GetActorLocation());
-	//if (DistanceToPlayer > SightConfig->SightRadius)
-	//	return;
-
-
-	UE_LOG(LogTemp, Error, TEXT("Angle: %f"), SightConfig->PeripheralVisionAngleDegrees);
-
 	switch (State)
 	{
 		case AIState::PATROL:
