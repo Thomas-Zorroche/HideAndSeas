@@ -76,6 +76,7 @@ void ASPatrolPath::ResetPatroller()
 		PatrollerController->MarkersLocations = MarkersLocation;
 		PatrollerController->LinkBehaviorTree();
 	}
+	OnSpawnedPatroller();
 }
 
 #if WITH_EDITOR
