@@ -66,16 +66,30 @@ void ASPatrolPath::SpawnPatroller()
 
 void ASPatrolPath::ResetPatroller()
 {
-	Patroller->SpawnDefaultController();
-
-	auto EnemyController = Patroller->GetController();
-	auto PatrollerController = Cast<ASPatrollerController>(EnemyController);
-	if (PatrollerController)
+	if (!Patroller)
 	{
-		//EnemyController->OnEnemyComponentChanged(); //askip c'est appelé tout seul
-		PatrollerController->MarkersLocations = MarkersLocation;
-		PatrollerController->LinkBehaviorTree();
+		UE_LOG(LogTemp, Error, TEXT("[ASPatrolPath::ResetPatroller] No Patroller Found."));
+		return;
 	}
+	
+	Patroller->SpawnDefaultController();
+	auto Controller = Patroller->GetController();
+	if (!Controller)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ASPatrolPath::ResetPatroller] No Controller Found."));
+		return;
+	}
+
+	auto PatrollerController = Cast<ASPatrollerController>(Controller);
+	if (!PatrollerController)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ASPatrolPath::ResetPatroller] No PatrollerController Found."));
+		return;
+	}
+
+	//EnemyController->OnEnemyComponentChanged(); //askip c'est appelé tout seul
+	PatrollerController->MarkersLocations = MarkersLocation;
+	PatrollerController->LinkBehaviorTree();
 	OnSpawnedPatroller();
 }
 

@@ -378,14 +378,20 @@ void UGameManager::UpdateGridVisibility()
 			FTile& Tile = CurrentIslandLevel.Grid[idx][idy];
 			ULevelStreaming* StreamingLevel = StreamedLevels[Tile.StreamingLevelID];
 			bool ShouldBeVisible = ShouldTileBeVisible(FIntPoint(idx, idy), CurrentPlayerGridCoord, 2);
-			StreamingLevel->SetShouldBeVisible(ShouldBeVisible);
 			
-			// If a tile is a level room, we need special behavior such as reset patrollers.
-			if (ShouldBeVisible && Tile.Type == TileType::PT_LEVELROOM)
+			if (ShouldBeVisible && StreamingLevel->GetShouldBeVisibleFlag())
 			{
+				continue;
+			}
+			else if (ShouldBeVisible)
+			{
+				StreamingLevel->SetShouldBeVisible(true);
 				TilesToUpdate.Add(&Tile);
-				UE_LOG(LogTemp, Warning, TEXT("ADD DYNAMIC SL %d"), Tile.StreamingLevelID);
-				//StreamingLevel->OnLevelShown.AddDynamic(this, &UGameManager::OnTileShown);
+				StreamingLevel->OnLevelShown.AddUniqueDynamic(this, &UGameManager::OnTileShown);
+			}
+			else
+			{
+				StreamingLevel->SetShouldBeVisible(false);
 			}
 		}
 	}
@@ -411,7 +417,6 @@ void FTile::FillPatrollerPaths(TArray<AActor*> Actors, const TArray<ULevelStream
 		return;
 
 	const auto StreamingLevel = StreamingLevels[StreamingLevelID];
-	//FBox TileBox = StreamingLevel->GetStreamingVolumeBounds();
 	FBox TileBox = ALevelBounds::CalculateLevelBounds(StreamingLevel->GetLoadedLevel());
 
 	if (!TileBox.IsValid)
@@ -439,8 +444,14 @@ void FTile::OnTileShown()
 	if (Type != TileType::PT_LEVELROOM)
 		return;
 
+	if (PatrollerPaths.Num() == 0)
+	{
+		FirstTimeShown = false;
+		return;
+	}
+
 	// Create Patrollers
-	UE_LOG(LogTemp, Warning, TEXT("OnTileShown %d, patrol path : %d"), StreamingLevelID, PatrollerPaths.Num());
+	UE_LOG(LogTemp, Warning, TEXT("OnTileShown %d, patrol path : %d, FirstTimeShown : %d"), StreamingLevelID, PatrollerPaths.Num(), FirstTimeShown);
 	for (auto PatrollerPath : PatrollerPaths)
 	{
 		if (FirstTimeShown)
