@@ -51,6 +51,7 @@ TileType UGameManager::FindTileTypeFromLevelName(const FString& LevelName) const
 	if (LevelName.Contains("PT_Transition"))	return TileType::PT_TRANSITION;
 	if (LevelName.Contains("Landscape"))		return TileType::NPT_LANDSCAPE;
 	if (LevelName.Contains("Square"))			return TileType::NPT_SQUARE;
+	if (LevelName.Contains("Water"))			return TileType::NPT_SQUARE;
 	else										return TileType::PT_LEVELROOM;
 }
 
@@ -217,6 +218,12 @@ void UGameManager::SpawnLevelTiles()
 	{
 		for (size_t idy = 0; idy < CurrentIslandLevel.Grid.Num(); idy++)
 		{
+			// Special case for water ( (0,2) & (1,2) )
+			if (idy == 2 && (idx == 0 || idx == 1))
+			{
+				continue;
+			}
+
 			FTile& Tile = CurrentIslandLevel.Grid[idx][idy];
 			ULevelStreaming* StreamingLevel = StreamedLevels[Tile.StreamingLevelID];
 			FString UniqueName = "Tile" + FString::FromInt(idx) + "_" + FString::FromInt(idy);
@@ -275,7 +282,7 @@ void UGameManager::OnTileShown()
 {
 	TilesShownNum++;
 	// Wait until all tiles are shown (tiles of any type in the TilesToUpdate list)
-	int MaxTiles = OnLevelBegin ? 25 : 10;
+	int MaxTiles = OnLevelBegin ? 23 : 10;
 	if (TilesShownNum != MaxTiles)
 	{
 		return;
