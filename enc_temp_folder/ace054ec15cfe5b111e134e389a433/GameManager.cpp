@@ -452,21 +452,18 @@ void FTile::OnTileShown()
 
 	// Create Patrollers
 	UE_LOG(LogTemp, Warning, TEXT("OnTileShown %d, patrol path : %d, FirstTimeShown : %d"), StreamingLevelID, PatrollerPaths.Num(), FirstTimeShown);
-	if (FirstTimeShown)
+	for (auto PatrollerPath : PatrollerPaths)
 	{
-		for (auto PatrollerPath : PatrollerPaths)
+		if (FirstTimeShown)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("CREATE PATROLLER"));
 			PatrollerPath->CreatePatroller();
+			FirstTimeShown = false;
 		}
-		FirstTimeShown = false;
-	}
-	else
-	{
-		for (auto PatrollerPath : PatrollerPaths)
+		else
 		{
-			PatrollerPath->ResetPatroller();
 			UE_LOG(LogTemp, Warning, TEXT("RESET PATROLLER"));
+			PatrollerPath->ResetPatroller();
 		}
 	}
 }
