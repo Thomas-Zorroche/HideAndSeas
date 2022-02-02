@@ -87,7 +87,7 @@ void ASPatrolPath::ResetPatroller()
 		return;
 	}
 
-	//EnemyController->OnEnemyComponentChanged(); //askip c'est appelé tout seul
+	//EnemyController->OnEnemyComponentChanged();
 	PatrollerController->MarkersLocations = MarkersLocation;
 	PatrollerController->LinkBehaviorTree();
 	OnSpawnedPatroller();

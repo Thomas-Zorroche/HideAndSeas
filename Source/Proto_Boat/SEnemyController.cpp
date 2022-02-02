@@ -44,14 +44,12 @@ void ASEnemyController::OnPossess(APawn* InPawn)
 	if (!InPawn)
 		return;
 
-	//IIsEnemy* SightInterface = Cast<IIsEnemy>(InPawn);
-	//if (SightInterface)
-	//{
-	//	EnemyComp = SightInterface->GetEnemyComp();
-	//	OnEnemyComponentChanged();
-	//}
-
-	OnEnemyComponentChanged();
+	IIsEnemy* SightInterface = Cast<IIsEnemy>(InPawn);
+	if (SightInterface)
+	{
+		EnemyComp = SightInterface->GetEnemyComp();
+		OnEnemyComponentChanged();
+	}
 
 	if (AIPerception)
 		AIPerception->OnTargetPerceptionUpdated.AddDynamic(this, &ASEnemyController::ActorsPerceptionUpdated);
@@ -81,14 +79,6 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 {
 	ASTopDownCharacter* Player = nullptr;
 	Player = Cast<ASTopDownCharacter>(Actor);
-	Distraction = Cast<ASSpellDistraction>(Actor);
-
-	if (Distraction) {
-		if (State == AIState::PATROL) {
-			SetAIState(AIState::DISTRACTED);
-		}
-		return;
-	}
 
 	if (!Player)
 		return;
@@ -99,10 +89,6 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 			if (Player->isVisible)
 				SetAIState(AIState::ALERT);
 			break;
-		case AIState::DISTRACTED:
-			if (Player->isVisible)
-				SetAIState(AIState::ALERT);
-			break;
 		case AIState::SEARCH:
 			if (Player->isVisible)
 				SetAIState(AIState::ALERT);
@@ -110,6 +96,10 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 		case AIState::ALERT:	SetAIState(AIState::SEARCH); break;
 		case AIState::ATTACK:	break;
 	}
+}
+
+void ASEnemyController::SetAlertLevel(const float NewAlertLevel) {
+	AlertLevel = NewAlertLevel;
 }
 
 void ASEnemyController::SetAIState(AIState NewState)
@@ -139,7 +129,6 @@ void ASEnemyController::SetAIState(AIState NewState)
 	case AIState::SEARCH: DebugStateLabel = "SEARCH"; break;
 	case AIState::ALERT:  DebugStateLabel = "ALERT"; break;
 	case AIState::ATTACK: DebugStateLabel = "ATTACK"; break;
-	case AIState::DISTRACTED: DebugStateLabel = "DISTRACTED"; break;
 	}
 
 	OnDebugStateLabelChanged(DebugStateLabel);
