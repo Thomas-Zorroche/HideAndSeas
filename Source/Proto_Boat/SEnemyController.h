@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "SSpellDistraction.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "SEnemyController.generated.h"
@@ -15,6 +16,7 @@ enum class AIState : uint8 {
 	SEARCH = 1 UMETA(DisplayName = "SEARCH"),
 	ALERT  = 2 UMETA(DisplayName = "ALERT"),
 	ATTACK = 3 UMETA(DisplayName = "ATTACK"),
+	DISTRACTED = 4 UMETA(DisplayName = "DISTRACTED"),
 };
 
 /**
@@ -65,6 +67,9 @@ private:
 public:
 	UPROPERTY(BlueprintReadWrite)
 	bool PawnFixe = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ASSpellDistraction* Distraction;
 
 protected:
 	// Value between 0.0 and 1.0. 1.0 being fully alerted --> Attack State

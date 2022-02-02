@@ -81,6 +81,14 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 {
 	ASTopDownCharacter* Player = nullptr;
 	Player = Cast<ASTopDownCharacter>(Actor);
+	Distraction = Cast<ASSpellDistraction>(Actor);
+
+	if (Distraction) {
+		if (State == AIState::PATROL) {
+			SetAIState(AIState::DISTRACTED);
+		}
+		return;
+	}
 
 	if (!Player)
 		return;
@@ -88,6 +96,10 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 	switch (State)
 	{
 		case AIState::PATROL:
+			if (Player->isVisible)
+				SetAIState(AIState::ALERT);
+			break;
+		case AIState::DISTRACTED:
 			if (Player->isVisible)
 				SetAIState(AIState::ALERT);
 			break;
@@ -127,6 +139,7 @@ void ASEnemyController::SetAIState(AIState NewState)
 	case AIState::SEARCH: DebugStateLabel = "SEARCH"; break;
 	case AIState::ALERT:  DebugStateLabel = "ALERT"; break;
 	case AIState::ATTACK: DebugStateLabel = "ATTACK"; break;
+	case AIState::DISTRACTED: DebugStateLabel = "DISTRACTED"; break;
 	}
 
 	OnDebugStateLabelChanged(DebugStateLabel);
