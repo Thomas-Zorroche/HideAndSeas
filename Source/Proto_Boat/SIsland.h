@@ -23,4 +23,16 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	void SetID(uint8 ID) { IslandID = ID; }
+
+	UFUNCTION(BlueprintCallable)
+	uint8 GetID() const { return IslandID; }
+
+	UPROPERTY(BlueprintReadWrite)
+	FTransform ExitTransform;
+
+private:
+	// ID of Island inside GameManager.Islands
+	uint8 IslandID;
 };
