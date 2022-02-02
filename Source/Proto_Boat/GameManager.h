@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "./ProceduralLevels/SRoomTemplate.h"
 #include "./Utility.h"
 #include "Runtime/Engine/Classes/Engine/LevelStreaming.h"
 #include "Math/IntPoint.h" 
