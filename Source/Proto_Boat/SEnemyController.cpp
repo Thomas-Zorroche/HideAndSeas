@@ -79,22 +79,38 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 {
 	ASTopDownCharacter* Player = nullptr;
 	Player = Cast<ASTopDownCharacter>(Actor);
+	Distraction = Cast<ASSpellDistraction>(Actor);
+
+	if (Distraction) {
+		if (State == AIState::PATROL) {
+			SetAIState(AIState::DISTRACTED);
+		}
+		return;
+	}
 
 	if (!Player)
 		return;
 
+	//double DistanceToPlayer = FVector::DistSquaredXY(GetPawn()->GetActorLocation(), Player->GetActorLocation());
+	//if (DistanceToPlayer > SightConfig->SightRadius)
+	//	return;
+
 	switch (State)
 	{
-		case AIState::PATROL:
-			if (Player->isVisible)
-				SetAIState(AIState::ALERT);
-			break;
-		case AIState::SEARCH:
-			if (Player->isVisible)
-				SetAIState(AIState::ALERT);
-			break;
-		case AIState::ALERT:	SetAIState(AIState::SEARCH); break;
-		case AIState::ATTACK:	break;
+	case AIState::PATROL:
+		if (Player->isVisible)
+			SetAIState(AIState::ALERT);
+		break;
+	case AIState::DISTRACTED:
+		if (Player->isVisible)
+			SetAIState(AIState::ALERT);
+		break;
+	case AIState::SEARCH:
+		if (Player->isVisible)
+			SetAIState(AIState::ALERT);
+		break;
+	case AIState::ALERT:	SetAIState(AIState::SEARCH); break;
+	case AIState::ATTACK:	break;
 	}
 }
 
@@ -129,6 +145,7 @@ void ASEnemyController::SetAIState(AIState NewState)
 	case AIState::SEARCH: DebugStateLabel = "SEARCH"; break;
 	case AIState::ALERT:  DebugStateLabel = "ALERT"; break;
 	case AIState::ATTACK: DebugStateLabel = "ATTACK"; break;
+	case AIState::DISTRACTED: DebugStateLabel = "DISTRACTED"; break;
 	}
 
 	OnDebugStateLabelChanged(DebugStateLabel);
