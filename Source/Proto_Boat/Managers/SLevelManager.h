@@ -89,6 +89,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	void FinishCurrentIsland();
 
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	bool isIslandFinished() { return FinishedIslands.Contains(GetCurrentIslandID()); }
+
 	const TArray<FIslandLevel>& GetIslandLevels() const { return Islands; }
 
 	FTile GetRandomRoom(RoomType roomType, BiomeType biome);
