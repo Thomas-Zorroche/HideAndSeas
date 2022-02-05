@@ -31,6 +31,14 @@ bool USLevelManager::CheckIslandIDValid() const
 	return true;
 }
 
+void USLevelManager::FinishCurrentIsland() {
+	const uint8 id = GetCurrentIslandID();
+	// Add the current island ID to the list of finished islands
+	if (!FinishedIslands.Contains(id)) {
+		FinishedIslands.Add(id);
+	}
+}
+
 // Retrieve all streaming levels from "LoadTiles" Map
 void USLevelManager::InitializeTilesPool() 
 {

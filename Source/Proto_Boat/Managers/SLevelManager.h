@@ -37,14 +37,15 @@ public:
 
 
 USTRUCT(BlueprintType)
-struct FIslandLevel {
+struct FIslandLevel
+{
 	GENERATED_BODY()
 
 public:
 	FIslandLevel() {};
 	//  [TO DO] : Lorsqu'on aura assez de tiles changer la valeur du biome entrée en dur...
-	FIslandLevel(FVector worldPosition, BiomeType biome, bool isMaritime, bool isFinished = false)
-		:WorldPosition(worldPosition), Biome(BiomeType::FOREST /* biome */), IsFinished(isFinished), IsMaritime(isMaritime) {}
+	FIslandLevel(FVector worldPosition, BiomeType biome, bool isMaritime)
+		:WorldPosition(worldPosition), Biome(BiomeType::FOREST /* biome */), IsMaritime(isMaritime) {}
 	// FVector GetWorldPosition() const { return WorldPosition; }
 
 	//TArray<FRoomInLevel> Rooms;
@@ -53,11 +54,9 @@ public:
 	TArray<bool> FinishedStates;
 
 	BiomeType Biome;
-	bool IsFinished = false;
 	bool IsMaritime;
 
 	TArray<TArray<FTile>> Grid;
-
 };
 
 
@@ -70,22 +69,25 @@ public:
 	void Initialize();
 
 	// Create a Tiles Pool
-	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	void InitializeTilesPool();
 
 	// Create Islands Level Data
-	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	void GenerateIslands(TArray<class ASIsland*> Islands, bool IsMaritime);
 
 	// Load Streaming Levels inside an Island Level
-	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	void LoadLevelTiles();
 
-	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	bool HasIslandLevels() const { return Islands.Num() > 0; }
 
-	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	bool IsTilesPoolNotEmpty() const { return TilesPool.Find(TileType::NPT_LANDSCAPE)->Num() > 0; }
+
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	void FinishCurrentIsland();
 
 	const TArray<FIslandLevel>& GetIslandLevels() const { return Islands; }
 
@@ -107,6 +109,10 @@ public:
 	// Last visited island
 	UPROPERTY(BlueprintReadWrite)
 	uint8 CurrentIslandID = 255;
+
+	// Array which contains IDs of finished islands
+	UPROPERTY(BlueprintReadOnly)
+	TArray<uint8> FinishedIslands;
 
 private:
 	TileType FindTileTypeFromLevelName(const FString& LevelName) const;
