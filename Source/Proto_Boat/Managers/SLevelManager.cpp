@@ -71,11 +71,12 @@ TileType USLevelManager::FindTileTypeFromLevelName(const FString& LevelName) con
 void USLevelManager::GenerateIslands(TArray<ASIsland*> IslandActors, bool IsMaritime) 
 {
 	for (auto Island : IslandActors) {
-		auto level = FIslandLevel(Island->GetActorLocation(), GetRandomBiomeType(), IsMaritime);
+		const uint8 islandId = Islands.Num() - 1;
+		auto level = FIslandLevel(Island->GetActorLocation(), islandId, GetRandomBiomeType(), IsMaritime);
 		InitializeIslandLevel(level);
 		Islands.Add(level);
 
-		Island->SetID(Islands.Num() - 1);
+		Island->SetID(islandId);
 	}
 }
 

@@ -44,14 +44,17 @@ struct FIslandLevel
 public:
 	FIslandLevel() {};
 	//  [TO DO] : Lorsqu'on aura assez de tiles changer la valeur du biome entrée en dur...
-	FIslandLevel(FVector worldPosition, BiomeType biome, bool isMaritime)
-		:WorldPosition(worldPosition), Biome(BiomeType::FOREST /* biome */), IsMaritime(isMaritime) {}
+	FIslandLevel(FVector worldPosition, uint8 id, BiomeType biome, bool isMaritime)
+		:WorldPosition(worldPosition), ID(id), Biome(BiomeType::FOREST /* biome */), IsMaritime(isMaritime) {}
 	// FVector GetWorldPosition() const { return WorldPosition; }
 
 	//TArray<FRoomInLevel> Rooms;
 
 	UPROPERTY(BlueprintReadOnly)
 	FVector WorldPosition;
+
+	UPROPERTY(BlueprintReadOnly)
+	uint8 ID;
 
 	TArray<bool> FinishedStates;
 
@@ -92,7 +95,7 @@ public:
 	void FinishCurrentIsland();
 
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
-	bool isIslandFinished() { return FinishedIslands.Contains(GetCurrentIslandID()); }
+	bool isIslandFinished(const uint8 islandId) { return FinishedIslands.Contains(islandId); }
 
 	const TArray<FIslandLevel>& GetIslandLevels() const { return Islands; }
 
