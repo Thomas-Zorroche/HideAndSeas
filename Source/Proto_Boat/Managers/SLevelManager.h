@@ -49,6 +49,8 @@ public:
 	// FVector GetWorldPosition() const { return WorldPosition; }
 
 	//TArray<FRoomInLevel> Rooms;
+
+	UPROPERTY(BlueprintReadOnly)
 	FVector WorldPosition;
 
 	TArray<bool> FinishedStates;
