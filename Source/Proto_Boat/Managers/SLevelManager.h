@@ -25,6 +25,9 @@ public:
 	// ID in the GetWorld().StreamingLevels
 	uint8 StreamingLevelID;
 
+	// ID in the Finished State (255 if not PT_LEVELROOM)
+	uint8 FinishedRoomID = 255;
+
 	// True first time the level streaming is shown. False after. 
 	bool FirstTimeShown = true;
 
@@ -86,6 +89,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "GameManager")
 	bool IsTilesPoolNotEmpty() const { return TilesPool.Find(TileType::NPT_LANDSCAPE)->Num() > 0; }
+
+	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	void CompleteRoom(FVector worldLocation);
 
 	const TArray<FIslandLevel>& GetIslandLevels() const { return Islands; }
 

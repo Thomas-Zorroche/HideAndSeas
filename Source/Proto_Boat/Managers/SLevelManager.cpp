@@ -186,6 +186,7 @@ void USLevelManager::InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType
 	// Update Tiles along Path coord to be Playable Tiles (Rooms and Transitions)
 	FVector2D PreviousCoord = FVector2D(2, 2);
 	Grid[PreviousCoord.X][PreviousCoord.Y] = GetRandomRoom(RoomPath[0], Biome);
+	Grid[PreviousCoord.X][PreviousCoord.Y].FinishedRoomID = 0;
 	FVector2D StartTransitionCoord = GetTransitionCoordinate(RoomPath[0], PreviousCoord);
 	Grid[StartTransitionCoord.X][StartTransitionCoord.Y] = GetRandomTile(TileType::PT_TRANSITION, Biome);
 
@@ -197,6 +198,7 @@ void USLevelManager::InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType
 		auto x = NextCoord.X;
 		auto y = NextCoord.Y;
 		Grid[NextCoord.X][NextCoord.Y] = GetRandomRoom(NextRoomType, Biome);
+		Grid[NextCoord.X][NextCoord.Y].FinishedRoomID = i + 1;
 		Grid[PTTransitionCoord.X][PTTransitionCoord.Y] = GetRandomTile(TileType::PT_TRANSITION, Biome);
 		PreviousCoord = NextCoord;
 	}
@@ -205,6 +207,7 @@ void USLevelManager::InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType
 	int x = NextCoord.X;
 	int y = NextCoord.Y;
 	Grid[x][y] = GetRandomRoom(RoomPath.Last(0), Biome);
+	Grid[x][y].FinishedRoomID = RoomPath.Num() - 1;
 }
 
 float USLevelManager::GetTileLocationFromGridCoordinate(int id)
@@ -411,6 +414,15 @@ void USLevelManager::UpdateGridVisibility()
 }
 
 
+void USLevelManager::CompleteRoom(FVector worldLocation) {
+	FIntPoint gridCoord;
+	GetGridCoordFromWorldLocation(gridCoord, worldLocation);
+	uint8 FinishedRoomID = Islands[CurrentIslandID].Grid[gridCoord.X][gridCoord.Y].FinishedRoomID;
+
+	Islands[CurrentIslandID].FinishedStates[FinishedRoomID] = true;
+
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 
 // FTile Functions
@@ -474,4 +486,3 @@ void FTile::OnTileShown()
 		}
 	}
 }
-
