@@ -420,7 +420,6 @@ void USLevelManager::CompleteRoom(FVector worldLocation) {
 	uint8 FinishedRoomID = Islands[CurrentIslandID].Grid[gridCoord.X][gridCoord.Y].FinishedRoomID;
 
 	Islands[CurrentIslandID].FinishedStates[FinishedRoomID] = true;
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
