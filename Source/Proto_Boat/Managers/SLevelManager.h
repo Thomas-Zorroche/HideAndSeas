@@ -6,6 +6,7 @@
 #include "UObject/NoExportTypes.h"
 #include "../Utility.h"
 #include "../SPatrolPath.h"
+#include "../SLevelLight.h"
 #include "Math/IntPoint.h" 
 
 #include "SLevelManager.generated.h"
@@ -16,8 +17,8 @@ struct FTile
 	GENERATED_BODY()
 
 public:
-	FTile(TileType Type = TileType::PT_LEVELROOM, FString Name = "", uint8 slID = 0)
-		: Type(Type), LevelName(Name), StreamingLevelID(slID) {}
+	FTile(TileType Type = TileType::PT_LEVELROOM, bool isCompleted = false, FString Name = "", uint8 slID = 0)
+		: Type(Type), IsCompleted(isCompleted), LevelName(Name), StreamingLevelID(slID) {}
 
 	TileType Type;
 	FString LevelName;
@@ -25,15 +26,16 @@ public:
 	// ID in the GetWorld().StreamingLevels
 	uint8 StreamingLevelID;
 
-	// ID in the Finished State (255 if not PT_LEVELROOM)
-	uint8 FinishedRoomID = 255;
+	// Only if FTile is LEVELROOM.
+	bool IsCompleted;
 
 	// True first time the level streaming is shown. False after. 
 	bool FirstTimeShown = true;
 
 	TArray<ASPatrolPath*> PatrollerPaths;
+	TArray<ASLevelLight*> LevelLights;
 
-	void FillPatrollerPaths(TArray<AActor*> Actors, const TArray<ULevelStreaming*>& StreamingLevels);
+	void FillActors(TArray<AActor*> PatrollerPathActors, TArray<AActor*> LevelLightActors, const TArray<ULevelStreaming*>& StreamingLevels);
 
 	void OnTileShown();
 };
@@ -52,8 +54,6 @@ public:
 
 	//TArray<FRoomInLevel> Rooms;
 	FVector WorldPosition;
-
-	TArray<bool> FinishedStates;
 
 	BiomeType Biome;
 	bool IsFinished = false;

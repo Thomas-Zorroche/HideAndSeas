@@ -43,7 +43,7 @@ void USLevelManager::InitializeTilesPool()
 		// Add a tile in the pool
 		TileType Type = FindTileTypeFromLevelName(LevelName);
 		auto Tiles = TilesPool.Find(Type);
-		Tiles->Add(FTile(Type, LevelName, StreamingLevelID));
+		Tiles->Add(FTile(Type, false, LevelName, StreamingLevelID));
 
 		StreamingLevelID++;
 	}
@@ -94,7 +94,7 @@ FTile USLevelManager::GetRandomTile(TileType TileType, BiomeType Biome)
 
 	// Return ID of TilesPool[TileType::LEVELROOM] 
 	//return RoomTiles->IndexOfByKey(RandomTile);
-	return FTile(TileType, RandomTile.LevelName, RandomTile.StreamingLevelID);
+	return FTile(TileType, false, RandomTile.LevelName, RandomTile.StreamingLevelID);
 }
 
 inline bool CheckBiomeAndRoomTypeFromLevelName(const FString& Name, BiomeType Biome, RoomType RoomType)
@@ -120,7 +120,9 @@ FTile USLevelManager::GetRandomRoom(RoomType RoomType, BiomeType Biome)
 
 	// Return ID of TilesPool[TileType::LEVELROOM] 
 	//return RoomTiles->IndexOfByKey(RandomTile);
-	return FTile(TileType::PT_LEVELROOM, RandomTile.LevelName, RandomTile.StreamingLevelID);;
+	return FTile(TileType::PT_LEVELROOM,
+		RoomType != RoomType::START_X && RoomType != RoomType::START_Y ? false : true,
+		RandomTile.LevelName, RandomTile.StreamingLevelID);
 }
 
 
@@ -132,18 +134,15 @@ void USLevelManager::InitializeIslandLevel(FIslandLevel& level)
 	// Start
 	RoomType PreviousRoomType = FMath::RandRange(0, 1) == 0 ? RoomType::START_Y : RoomType::START_X;
 	RoomPath.Add(PreviousRoomType);
-	level.FinishedStates.Add(true);
 
 	// In between Rooms
 	for (int i = 1; i < LEVELROOMS_COUNT - 1; i++) {
-		level.FinishedStates.Add(false);
 		RoomType NextRoomType = GetRandomRoomType(PreviousRoomType);
 		RoomPath.Add(NextRoomType);
 		PreviousRoomType = NextRoomType;
 	}
 
 	// Create End Room
-	level.FinishedStates.Add(false);
 	RoomPath.Add(GetRandomEndType(PreviousRoomType));
 
 	// Initialize Grid
@@ -186,7 +185,6 @@ void USLevelManager::InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType
 	// Update Tiles along Path coord to be Playable Tiles (Rooms and Transitions)
 	FVector2D PreviousCoord = FVector2D(2, 2);
 	Grid[PreviousCoord.X][PreviousCoord.Y] = GetRandomRoom(RoomPath[0], Biome);
-	Grid[PreviousCoord.X][PreviousCoord.Y].FinishedRoomID = 0;
 	FVector2D StartTransitionCoord = GetTransitionCoordinate(RoomPath[0], PreviousCoord);
 	Grid[StartTransitionCoord.X][StartTransitionCoord.Y] = GetRandomTile(TileType::PT_TRANSITION, Biome);
 
@@ -198,7 +196,6 @@ void USLevelManager::InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType
 		auto x = NextCoord.X;
 		auto y = NextCoord.Y;
 		Grid[NextCoord.X][NextCoord.Y] = GetRandomRoom(NextRoomType, Biome);
-		Grid[NextCoord.X][NextCoord.Y].FinishedRoomID = i + 1;
 		Grid[PTTransitionCoord.X][PTTransitionCoord.Y] = GetRandomTile(TileType::PT_TRANSITION, Biome);
 		PreviousCoord = NextCoord;
 	}
@@ -207,7 +204,6 @@ void USLevelManager::InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType
 	int x = NextCoord.X;
 	int y = NextCoord.Y;
 	Grid[x][y] = GetRandomRoom(RoomPath.Last(0), Biome);
-	Grid[x][y].FinishedRoomID = RoomPath.Num() - 1;
 }
 
 float USLevelManager::GetTileLocationFromGridCoordinate(int id)
@@ -307,28 +303,33 @@ void USLevelManager::OnTileShown()
 
 
 	// Search if one tile is FirstTimeShow
-	bool NeedToSearchPatrollers = false;
+	bool NeedToSearchForActors = false;
 	for (FTile* Tile : LevelRoomTiles)
 	{
 		if (Tile->FirstTimeShown)
 		{
-			NeedToSearchPatrollers = true;
+			NeedToSearchForActors = true;
 			break;
 		}
 	}
 
 	// If there is at least one, find all patrol paths on the map
 	TArray<AActor*> PatrolPaths;
-	if (NeedToSearchPatrollers)
+	TArray<AActor*> LevelLights;
+	if (NeedToSearchForActors)
 	{
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASPatrolPath::StaticClass(), PatrolPaths);
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASLevelLight::StaticClass(), LevelLights);
 	}
 
 	// Update Tiles
 	for (FTile* Tile : LevelRoomTiles)
 	{
-		if (Tile->FirstTimeShown)
-			Tile->FillPatrollerPaths(PatrolPaths, GetWorld()->GetStreamingLevels());
+		if (Tile->FirstTimeShown) 
+		{
+			//Tile->FillPatrollerPaths(PatrolPaths, GetWorld()->GetStreamingLevels());
+			Tile->FillActors(PatrolPaths, LevelLights, GetWorld()->GetStreamingLevels());
+		}
 		Tile->OnTileShown();
 	}
 
@@ -414,19 +415,24 @@ void USLevelManager::UpdateGridVisibility()
 }
 
 
-void USLevelManager::CompleteRoom(FVector worldLocation) {
+void USLevelManager::CompleteRoom(FVector worldLocation)
+{
 	FIntPoint gridCoord;
 	GetGridCoordFromWorldLocation(gridCoord, worldLocation);
-	uint8 FinishedRoomID = Islands[CurrentIslandID].Grid[gridCoord.X][gridCoord.Y].FinishedRoomID;
+	FTile tile = Islands[CurrentIslandID].Grid[gridCoord.Y][gridCoord.X];
+	tile.IsCompleted = true;
 
-	Islands[CurrentIslandID].FinishedStates[FinishedRoomID] = true;
+	for (auto light : tile.LevelLights)
+	{
+		light->TurnOn(true);
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 
 // FTile Functions
 
-void FTile::FillPatrollerPaths(TArray<AActor*> Actors, const TArray<ULevelStreaming*>& StreamingLevels)
+void FTile::FillActors(TArray<AActor*> PatrollerPathActors, TArray<AActor*> LevelLightActors, const TArray<ULevelStreaming*>& StreamingLevels)
 {
 	if (Type != TileType::PT_LEVELROOM)
 		return;
@@ -436,12 +442,12 @@ void FTile::FillPatrollerPaths(TArray<AActor*> Actors, const TArray<ULevelStream
 
 	if (!TileBox.IsValid)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[FTile::FillPatrollerPaths] FBox Invalid."));
+		UE_LOG(LogTemp, Warning, TEXT("[FTile::FillActors] FBox Invalid."));
 		return;
 	}
 
 	// Retrieve all Patroller Paths inside the tile
-	for (auto Actor : Actors)
+	for (auto Actor : PatrollerPathActors)
 	{
 		if (TileBox.IsInsideXY(Actor->GetActorLocation()))
 		{
@@ -452,6 +458,20 @@ void FTile::FillPatrollerPaths(TArray<AActor*> Actors, const TArray<ULevelStream
 			}
 		}
 	}
+
+	// Retrieve all LevelLight inside the tile
+	for (auto Actor : LevelLightActors)
+	{
+		if (TileBox.IsInsideXY(Actor->GetActorLocation()))
+		{
+			auto LevelLight = Cast<ASLevelLight>(Actor);
+			if (LevelLight)
+			{
+				LevelLights.Add(LevelLight);
+			}
+		}
+	}
+
 }
 
 void FTile::OnTileShown()
@@ -473,6 +493,11 @@ void FTile::OnTileShown()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("CREATE PATROLLER"));
 			PatrollerPath->CreatePatroller();
+		}
+
+		for (auto Light : LevelLights)
+		{
+			Light->TurnOn(IsCompleted);
 		}
 		FirstTimeShown = false;
 	}
