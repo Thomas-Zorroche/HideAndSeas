@@ -13,12 +13,27 @@ void USLevelManager::Initialize()
 {
 	Islands = {};
 	TilesPool = {};
+	InitializeCrystalColors();
 
 	TilesPool.Add(TileType::NPT_LANDSCAPE, {});
 	TilesPool.Add(TileType::NPT_SQUARE, {});
 	TilesPool.Add(TileType::NPT_TRANSITION, {});
 	TilesPool.Add(TileType::PT_LEVELROOM, {});
 	TilesPool.Add(TileType::PT_TRANSITION, {});
+}
+
+void USLevelManager::InitializeCrystalColors()
+{
+	for (const auto Island : Islands)
+	{
+		FColor RandomColor = FColor::MakeRandomColor();
+		CrystalColors.Add(RandomColor);
+	}
+}
+
+FColor USLevelManager::GetCrystalColorOfCurrentIsland()
+{
+	return CrystalColors[CurrentIslandID];
 }
 
 bool USLevelManager::CheckIslandIDValid() const
@@ -29,6 +44,20 @@ bool USLevelManager::CheckIslandIDValid() const
 		return false;
 	}
 	return true;
+}
+
+void USLevelManager::FinishCurrentIsland() {
+	const uint8 id = GetCurrentIslandID();
+	// Add the current island ID to the list of finished islands
+	if (!FinishedIslands.Contains(id)) {
+		FinishedIslands.Add(id);
+	}
+
+	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (Controller)
+	{
+		Controller->AddCrystal(id, CrystalColor[id]);
+	}
 }
 
 // Retrieve all streaming levels from "LoadTiles" Map
@@ -63,12 +92,14 @@ TileType USLevelManager::FindTileTypeFromLevelName(const FString& LevelName) con
 void USLevelManager::GenerateIslands(TArray<ASIsland*> IslandActors, bool IsMaritime) 
 {
 	for (auto Island : IslandActors) {
-		auto level = FIslandLevel(Island->GetActorLocation(), GetRandomBiomeType(), IsMaritime);
+		const uint8 islandId = Islands.Num() - 1;
+		auto level = FIslandLevel(Island->GetActorLocation(), islandId, GetRandomBiomeType(), IsMaritime);
 		InitializeIslandLevel(level);
 		Islands.Add(level);
 
-		Island->SetID(Islands.Num() - 1);
+		Island->SetID(islandId);
 	}
+	InitializeCrystalColors();
 }
 
 
