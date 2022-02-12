@@ -13,12 +13,27 @@ void USLevelManager::Initialize()
 {
 	Islands = {};
 	TilesPool = {};
+	InitializeCrystalColors();
 
 	TilesPool.Add(TileType::NPT_LANDSCAPE, {});
 	TilesPool.Add(TileType::NPT_SQUARE, {});
 	TilesPool.Add(TileType::NPT_TRANSITION, {});
 	TilesPool.Add(TileType::PT_LEVELROOM, {});
 	TilesPool.Add(TileType::PT_TRANSITION, {});
+}
+
+void USLevelManager::InitializeCrystalColors()
+{
+	for (const auto Island : Islands)
+	{
+		FColor RandomColor = FColor::MakeRandomColor();
+		CrystalColors.Add(RandomColor);
+	}
+}
+
+FColor USLevelManager::GetCrystalColorOfCurrentIsland()
+{
+	return CrystalColors[CurrentIslandID];
 }
 
 bool USLevelManager::CheckIslandIDValid() const
@@ -36,6 +51,12 @@ void USLevelManager::FinishCurrentIsland() {
 	// Add the current island ID to the list of finished islands
 	if (!FinishedIslands.Contains(id)) {
 		FinishedIslands.Add(id);
+	}
+
+	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (Controller)
+	{
+		Controller->AddCrystal(id, CrystalColor[id]);
 	}
 }
 
@@ -78,6 +99,7 @@ void USLevelManager::GenerateIslands(TArray<ASIsland*> IslandActors, bool IsMari
 
 		Island->SetID(islandId);
 	}
+	InitializeCrystalColors();
 }
 
 

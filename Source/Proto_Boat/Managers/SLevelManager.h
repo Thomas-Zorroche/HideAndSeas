@@ -96,6 +96,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	bool isIslandFinished(const uint8 islandId) { return FinishedIslands.Contains(islandId); }
+	
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	FColor GetCrystalColorOfCurrentIsland();
 
 	const TArray<FIslandLevel>& GetIslandLevels() const { return Islands; }
 
@@ -122,7 +125,11 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	TArray<uint8> FinishedIslands;
 
+	TArray<FColor> CrystalColors;
+
 private:
+	void InitializeCrystalColors();
+
 	TileType FindTileTypeFromLevelName(const FString& LevelName) const;
 
 	void InitializeIslandLevel(FIslandLevel& level);
