@@ -31,6 +31,9 @@ public:
 
 	void OnTileReload();
 
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "SPatroller")
+	void OnRoomComplete();
+
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class USEnemyComponent* EnemyComp;

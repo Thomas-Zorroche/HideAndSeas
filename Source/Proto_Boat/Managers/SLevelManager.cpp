@@ -4,6 +4,7 @@
 #include "Engine/LevelBounds.h" 
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
+#include "../SPatroller.h"
 
 #include "../SIsland.h"
 #include "../Interfaces/SLevelLoaded.h"
@@ -425,6 +426,10 @@ void USLevelManager::CompleteRoom(FVector worldLocation)
 	for (auto light : tile.LevelLights)
 	{
 		light->TurnOn(true);
+	}
+
+	for (auto path : tile.PatrollerPaths) {
+		path->Patroller->OnRoomComplete();
 	}
 }
 
