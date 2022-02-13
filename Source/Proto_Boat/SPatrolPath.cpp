@@ -32,7 +32,10 @@ void ASPatrolPath::CreatePatroller()
 
 	FillMarkersLocation(AttachedActors);
 	SpawnPatroller();
-	OnSpawnedPatroller();
+	if (IsAlive)
+	{
+		OnSpawnedPatroller();
+	}
 }
 
 
@@ -49,7 +52,7 @@ void ASPatrolPath::SpawnPatroller()
 	SpawnParameters.Owner = this; 
 	auto Actor = GetWorld()->SpawnActor<ASPatroller>(PatrollerClass, MarkersLocation[0], FRotator(EForceInit::ForceInitToZero), SpawnParameters);
 	Patroller = Cast<ASPatroller>(Actor);
-	if (Patroller)
+	if (Patroller && IsAlive)
 	{
 		Patroller->SpawnDefaultController();
 		Patroller->EnemyComp = EnemyComp;

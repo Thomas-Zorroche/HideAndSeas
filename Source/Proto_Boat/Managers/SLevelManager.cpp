@@ -546,6 +546,7 @@ void FTile::OnTileShown()
 		{
 			if (IsValid(PatrollerPath))
 			{
+				PatrollerPath->IsAlive = !IsCompleted;
 				PatrollerPath->CreatePatroller();
 			}
 		}
