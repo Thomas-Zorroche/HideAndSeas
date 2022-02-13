@@ -128,6 +128,7 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	TArray<uint8> FinishedIslands;
 
+	UPROPERTY(BlueprintReadOnly)
 	TArray<FColor> CrystalColors;
 
 private:
