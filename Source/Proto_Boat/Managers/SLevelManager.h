@@ -22,8 +22,11 @@ public:
 	TileType Type;
 	FString LevelName;
 
-	// ID in the GetWorld().StreamingLevels
-	uint8 StreamingLevelID;
+	// Common ID in the GetWorld().StreamingLevels
+	uint8 StreamingLevelID = 0;
+
+	// Unique ID in the grid
+	uint8 GridID = 0;
 
 	// True first time the level streaming is shown. False after. 
 	bool FirstTimeShown = true;

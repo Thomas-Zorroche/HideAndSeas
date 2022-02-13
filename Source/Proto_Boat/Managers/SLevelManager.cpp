@@ -52,12 +52,6 @@ void USLevelManager::FinishCurrentIsland() {
 	if (!FinishedIslands.Contains(id)) {
 		FinishedIslands.Add(id);
 	}
-
-	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	if (Controller)
-	{
-		Controller->AddCrystal(id, CrystalColor[id]);
-	}
 }
 
 // Retrieve all streaming levels from "LoadTiles" Map
@@ -92,7 +86,7 @@ TileType USLevelManager::FindTileTypeFromLevelName(const FString& LevelName) con
 void USLevelManager::GenerateIslands(TArray<ASIsland*> IslandActors, bool IsMaritime) 
 {
 	for (auto Island : IslandActors) {
-		const uint8 islandId = Islands.Num() - 1;
+		const uint8 islandId = Islands.Num();
 		auto level = FIslandLevel(Island->GetActorLocation(), islandId, GetRandomBiomeType(), IsMaritime);
 		InitializeIslandLevel(level);
 		Islands.Add(level);
@@ -151,7 +145,7 @@ FTile USLevelManager::GetRandomRoom(RoomType RoomType, BiomeType Biome)
 
 	// Return ID of TilesPool[TileType::LEVELROOM] 
 	//return RoomTiles->IndexOfByKey(RandomTile);
-	return FTile(TileType::PT_LEVELROOM, RandomTile.LevelName, RandomTile.StreamingLevelID);;
+	return FTile(TileType::PT_LEVELROOM, RandomTile.LevelName, RandomTile.StreamingLevelID);
 }
 
 
@@ -278,6 +272,10 @@ void USLevelManager::LoadLevelTiles()
 	if (!CheckIslandIDValid())
 		return;
 
+	TilesToUpdate.Empty();
+	TilesShownNum = 0;
+	OnLevelBegin = true;
+
 	CurrentPlayerGridCoord = { 2, 2 };
 	FIslandLevel& CurrentIslandLevel = Islands[CurrentIslandID];
 	const TArray<ULevelStreaming*>& StreamedLevels = GetWorld()->GetStreamingLevels();
@@ -299,9 +297,19 @@ void USLevelManager::LoadLevelTiles()
 			auto LevelInstance = StreamingLevel->CreateInstance(UniqueName);
 			LevelInstance->LevelTransform = FTransform(GetTileTransformFromGridCoordinates(idx, idy));
 
-			Tile.StreamingLevelID = StreamingLevelID;
 			// Update StreamingLevelID
-			StreamingLevelID++;
+			if (Tile.FirstTimeShown)
+			{
+				Tile.GridID = StreamingLevelID;
+				StreamingLevelID++;
+			}
+			else
+			{
+				Tile.FirstTimeShown = true;
+				Tile.PatrollerPaths.Empty();
+				// TODO empty lights
+
+			}
 
 			LevelInstance->SetShouldBeLoaded(true);
 			if (ShouldTileBeVisible(FIntPoint(idx, idy), CurrentPlayerGridCoord))
@@ -451,7 +459,7 @@ void FTile::FillPatrollerPaths(TArray<AActor*> Actors, const TArray<ULevelStream
 	if (Type != TileType::PT_LEVELROOM)
 		return;
 
-	const auto StreamingLevel = StreamingLevels[StreamingLevelID];
+	const auto StreamingLevel = StreamingLevels[GridID];
 	FBox TileBox = ALevelBounds::CalculateLevelBounds(StreamingLevel->GetLoadedLevel());
 
 	if (!TileBox.IsValid)
