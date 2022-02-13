@@ -87,7 +87,7 @@ void USLevelManager::GenerateIslands(TArray<ASIsland*> IslandActors, bool IsMari
 {
 	for (auto Island : IslandActors) {
 		const uint8 islandId = Islands.Num();
-		auto level = FIslandLevel(Island->GetActorLocation(), islandId, GetRandomBiomeType(), IsMaritime);
+		auto level = FIslandLevel(Island->GetActorTransform(), islandId, GetRandomBiomeType(), IsMaritime);
 		InitializeIslandLevel(level);
 		Islands.Add(level);
 

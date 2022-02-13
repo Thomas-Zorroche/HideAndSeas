@@ -47,14 +47,11 @@ struct FIslandLevel
 public:
 	FIslandLevel() {};
 	//  [TO DO] : Lorsqu'on aura assez de tiles changer la valeur du biome entrée en dur...
-	FIslandLevel(FVector worldPosition, uint8 id, BiomeType biome, bool isMaritime)
-		:WorldPosition(worldPosition), ID(id), Biome(BiomeType::FOREST /* biome */), IsMaritime(isMaritime) {}
-	// FVector GetWorldPosition() const { return WorldPosition; }
-
-	//TArray<FRoomInLevel> Rooms;
+	FIslandLevel(FTransform transform, uint8 id, BiomeType biome, bool isMaritime)
+		: Transform(transform), ID(id), Biome(BiomeType::FOREST /* biome */), IsMaritime(isMaritime) {}
 
 	UPROPERTY(BlueprintReadOnly)
-	FVector WorldPosition;
+	FTransform Transform;
 
 	UPROPERTY(BlueprintReadOnly)
 	uint8 ID;

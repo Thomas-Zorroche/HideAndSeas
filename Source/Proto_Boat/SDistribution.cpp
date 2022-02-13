@@ -112,9 +112,9 @@ TArray<ASIsland*> ASDistribution::GenerateActorsRandomly()
 {
 	Reset();
 
-	TArray<ASIsland*> IslandLocations;
-	GenerateAllActors(IslandLocations);
-	return IslandLocations;
+	TArray<ASIsland*> Islands;
+	GenerateAllActors(Islands);
+	return Islands;
 }
 
 void ASDistribution::GenerateAllActors(TArray<ASIsland*>& Islands)
@@ -145,12 +145,14 @@ void ASDistribution::GenerateAllActors(TArray<ASIsland*>& Islands)
 void ASDistribution::GenerateIslands(const TArray<FIslandLevel>& IslandLevels)
 {
 	int IslandID = 0;
-	for (auto Island : IslandLevels)
+	for (auto IslandLevel : IslandLevels)
 	{
-		auto actor = SpawnActor(Island.WorldPosition, IslandClass);
-		auto island = Cast<ASIsland>(actor);
-		if (island) 
-			island->SetID(IslandID);
+		auto Actor = SpawnActor(IslandLevel.Transform, IslandClass);
+		auto Island = Cast<ASIsland>(Actor);
+		if (Island)
+		{
+			Island->SetID(IslandID);
+		}
 		IslandID++;
 	}
 }
@@ -174,6 +176,14 @@ void ASDistribution::GenerateOthersActors()
 	}
 }
 
+FRotator FRandomYawRotator()
+{
+	const float pitch = 0.0f;
+	const float yaw = FMath::FRandRange(-180.f, 180.f);
+	const float roll = 0.0f;
+	return FRotator(pitch, yaw, roll);
+}
+
 TArray<AActor*> ASDistribution::SpawnActorsRandomly(const FActorToSpawnData& ActorData)
 {
 	int SpawnActorCount = 0;
@@ -191,11 +201,13 @@ TArray<AActor*> ASDistribution::SpawnActorsRandomly(const FActorToSpawnData& Act
 		if (!ZDistribution)
 			SpawnLocation.Z = GetActorLocation().Z;
 		
-		auto SpawnedActor = SpawnActor(SpawnLocation, ActorData.Class);
+		auto SpawnedActor = SpawnActor(FTransform(FRandomYawRotator(), SpawnLocation), ActorData.Class);
 		if (SpawnedActor)
 		{
 			SpawnActorCount++;
 			Actors.Add(SpawnedActor);
+
+			auto Island = Cast<ASIsland>(SpawnedActor);
 		}
 	}
 
@@ -207,10 +219,10 @@ TArray<AActor*> ASDistribution::SpawnActorsRandomly(const FActorToSpawnData& Act
 	return Actors;
 }
 
-AActor* ASDistribution::SpawnActor(const FVector& SpawnLocation, TSubclassOf<AActor> Class)
+AActor* ASDistribution::SpawnActor(const FTransform& Transform, TSubclassOf<AActor> Class)
 {
 	// Create new Actor
-	AActor* Actor = GetWorld()->SpawnActor<AActor>(Class, SpawnLocation, GetActorRotation());
+	AActor* Actor = GetWorld()->SpawnActor<AActor>(Class, Transform);
 	if (Actor)
 	{
 		Actor->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
