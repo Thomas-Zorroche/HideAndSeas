@@ -54,6 +54,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> PatrollerClass;
 
+	bool IsAlive = true;
 
 private:
 	static const int MARKERS_COUNT_MAX;

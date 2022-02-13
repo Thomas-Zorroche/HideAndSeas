@@ -89,7 +89,7 @@ void ASPatrolPath::ResetPatroller()
 
 	//EnemyController->OnEnemyComponentChanged();
 	PatrollerController->MarkersLocations = MarkersLocation;
-	PatrollerController->LinkBehaviorTree();
+	if (IsAlive) PatrollerController->LinkBehaviorTree();
 	OnSpawnedPatroller();
 }
 

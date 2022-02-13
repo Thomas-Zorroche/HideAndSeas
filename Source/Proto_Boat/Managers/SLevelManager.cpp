@@ -430,6 +430,7 @@ void USLevelManager::CompleteRoom(FVector worldLocation)
 
 	for (auto path : tile.PatrollerPaths) {
 		path->Patroller->OnRoomComplete();
+		path->IsAlive = false;
 	}
 }
 
