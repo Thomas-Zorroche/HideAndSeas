@@ -26,7 +26,6 @@ void USLevelManager::Initialize()
 void USLevelManager::ClearGridTimer()
 {
 	GetWorld()->GetTimerManager().ClearTimer(GridTimerHandle);
-	UE_LOG(LogTemp, Error, TEXT("Clear Timer"));
 }
 
 void USLevelManager::InitializeCrystalColors()
