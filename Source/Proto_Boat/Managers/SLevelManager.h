@@ -36,6 +36,7 @@ public:
 	bool FirstTimeShown = true;
 
 	TArray<ASPatrolPath*> PatrollerPaths;
+
 	TArray<ASLevelLight*> LevelLights;
 
 	void FillActors(TArray<AActor*> PatrollerPathActors, TArray<AActor*> LevelLightActors, const TArray<ULevelStreaming*>& StreamingLevels);
@@ -110,6 +111,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	void ClearGridTimer();
 
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	TArray<class ASPatrolPath*> GetPatrollersFromActorTile(AActor* Actor);
+
 	const TArray<FIslandLevel>& GetIslandLevels() const { return Islands; }
 
 	FTile GetRandomRoom(RoomType roomType, BiomeType biome);
@@ -153,10 +157,10 @@ private:
 	int GetGridTiles() const { return GetGridWidth() * GetGridWidth(); };
 
 	UFUNCTION()
-		void OnTileShown();
+	void OnTileShown();
 
 	UFUNCTION()
-		void UpdateGridVisibility();
+	void UpdateGridVisibility();
 
 	void GetGridCoordFromWorldLocation(FIntPoint& TileCoord, const FVector& WorldLocation);
 
