@@ -6,6 +6,7 @@
 #include "UObject/NoExportTypes.h"
 #include "../Utility.h"
 #include "../SPatrolPath.h"
+#include "../SLevelLight.h"
 #include "Math/IntPoint.h" 
 
 #include "SLevelManager.generated.h"
@@ -16,48 +17,56 @@ struct FTile
 	GENERATED_BODY()
 
 public:
-	FTile(TileType Type = TileType::PT_LEVELROOM, FString Name = "", uint8 slID = 0)
-		: Type(Type), LevelName(Name), StreamingLevelID(slID) {}
+	FTile(TileType Type = TileType::PT_LEVELROOM, bool isCompleted = false, FString Name = "", uint8 slID = 0)
+		: Type(Type), IsCompleted(isCompleted), LevelName(Name), StreamingLevelID(slID) {}
 
 	TileType Type;
 	FString LevelName;
 
-	// ID in the GetWorld().StreamingLevels
-	uint8 StreamingLevelID;
+	// Common ID in the GetWorld().StreamingLevels
+	uint8 StreamingLevelID = 0;
+
+	// Unique ID in the grid
+	uint8 GridID = 0;
+
+	// If the room is completed (Only for LEVELROOM)
+	bool IsCompleted;
 
 	// True first time the level streaming is shown. False after. 
 	bool FirstTimeShown = true;
 
 	TArray<ASPatrolPath*> PatrollerPaths;
 
-	void FillPatrollerPaths(TArray<AActor*> Actors, const TArray<ULevelStreaming*>& StreamingLevels);
+	TArray<ASLevelLight*> LevelLights;
+
+	void FillActors(TArray<AActor*> PatrollerPathActors, TArray<AActor*> LevelLightActors, const TArray<ULevelStreaming*>& StreamingLevels);
 
 	void OnTileShown();
 };
 
 
 USTRUCT(BlueprintType)
-struct FIslandLevel {
+struct FIslandLevel
+{
 	GENERATED_BODY()
 
 public:
 	FIslandLevel() {};
-	//  [TO DO] : Lorsqu'on aura assez de tiles changer la valeur du biome entrée en dur...
-	FIslandLevel(FVector worldPosition, BiomeType biome, bool isMaritime, bool isFinished = false)
-		:WorldPosition(worldPosition), Biome(BiomeType::FOREST /* biome */), IsFinished(isFinished), IsMaritime(isMaritime) {}
-	// FVector GetWorldPosition() const { return WorldPosition; }
+	//  [TO DO] : Lorsqu'on aura assez de tiles changer la valeur du biome entrï¿½e en dur...
+	FIslandLevel(FTransform transform, uint8 id, BiomeType biome, bool isMaritime)
+		: Transform(transform), ID(id), Biome(BiomeType::FOREST /* biome */), IsMaritime(isMaritime) {}
 
-	//TArray<FRoomInLevel> Rooms;
-	FVector WorldPosition;
+	UPROPERTY(BlueprintReadOnly)
+	FTransform Transform;
 
-	TArray<bool> FinishedStates;
-
+	UPROPERTY(BlueprintReadOnly)
+	uint8 ID;
 	BiomeType Biome;
-	bool IsFinished = false;
 	bool IsMaritime;
 
 	TArray<TArray<FTile>> Grid;
 
+	bool GridLoaded = false;
 };
 
 
@@ -70,22 +79,40 @@ public:
 	void Initialize();
 
 	// Create a Tiles Pool
-	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	void InitializeTilesPool();
 
 	// Create Islands Level Data
-	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	void GenerateIslands(TArray<class ASIsland*> Islands, bool IsMaritime);
 
 	// Load Streaming Levels inside an Island Level
-	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	void LoadLevelTiles();
 
-	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	bool HasIslandLevels() const { return Islands.Num() > 0; }
 
-	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	bool IsTilesPoolNotEmpty() const { return TilesPool.Find(TileType::NPT_LANDSCAPE)->Num() > 0; }
+
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	void FinishCurrentIsland();
+
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	bool isIslandFinished(const uint8 islandId) { return FinishedIslands.Contains(islandId); }
+	
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	FColor GetCrystalColorOfCurrentIsland();
+
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	void CompleteRoom(FVector worldLocation);
+
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	void ClearGridTimer();
+
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	TArray<class ASPatrolPath*> GetPatrollersFromActorTile(AActor* Actor);
 
 	const TArray<FIslandLevel>& GetIslandLevels() const { return Islands; }
 
@@ -108,7 +135,18 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	uint8 CurrentIslandID = 255;
 
+	// Array which contains IDs of finished islands
+	UPROPERTY(BlueprintReadOnly)
+	TArray<uint8> FinishedIslands;
+
+	UPROPERTY(BlueprintReadOnly)
+	TArray<FColor> CrystalColors;
+
+	FTimerHandle GridTimerHandle;
+
 private:
+	void InitializeCrystalColors();
+
 	TileType FindTileTypeFromLevelName(const FString& LevelName) const;
 
 	void InitializeIslandLevel(FIslandLevel& level);
@@ -119,10 +157,10 @@ private:
 	int GetGridTiles() const { return GetGridWidth() * GetGridWidth(); };
 
 	UFUNCTION()
-		void OnTileShown();
+	void OnTileShown();
 
 	UFUNCTION()
-		void UpdateGridVisibility();
+	void UpdateGridVisibility();
 
 	void GetGridCoordFromWorldLocation(FIntPoint& TileCoord, const FVector& WorldLocation);
 

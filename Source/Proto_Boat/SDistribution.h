@@ -61,7 +61,7 @@ private:
 	void GenerateOthersActors(); // Only actors that are not Island
 
 	TArray<AActor*> SpawnActorsRandomly(const FActorToSpawnData& ActorData);
-	AActor* SpawnActor(const FVector& SpawnLocation, TSubclassOf<AActor> Class);
+	AActor* SpawnActor(const FTransform& SpawnLocation, TSubclassOf<AActor> Class);
 
 	bool GenerateRandomCoordinatesInsideBox(FVector& Location, const FActorToSpawnData& ActorData);
 

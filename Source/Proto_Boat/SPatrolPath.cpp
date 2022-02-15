@@ -32,7 +32,10 @@ void ASPatrolPath::CreatePatroller()
 
 	FillMarkersLocation(AttachedActors);
 	SpawnPatroller();
-	OnSpawnedPatroller();
+	if (IsAlive)
+	{
+		OnSpawnedPatroller();
+	}
 }
 
 
@@ -49,7 +52,7 @@ void ASPatrolPath::SpawnPatroller()
 	SpawnParameters.Owner = this; 
 	auto Actor = GetWorld()->SpawnActor<ASPatroller>(PatrollerClass, MarkersLocation[0], FRotator(EForceInit::ForceInitToZero), SpawnParameters);
 	Patroller = Cast<ASPatroller>(Actor);
-	if (Patroller)
+	if (Patroller && IsAlive)
 	{
 		Patroller->SpawnDefaultController();
 		Patroller->EnemyComp = EnemyComp;
@@ -57,7 +60,6 @@ void ASPatrolPath::SpawnPatroller()
 		auto PatrollerController = Cast<ASPatrollerController>(EnemyController);
 		if (PatrollerController)
 		{
-			//EnemyController->OnEnemyComponentChanged(); askip c'est appelé tout seul
 			PatrollerController->MarkersLocations = MarkersLocation;
 			PatrollerController->LinkBehaviorTree();
 		}
@@ -66,13 +68,69 @@ void ASPatrolPath::SpawnPatroller()
 
 void ASPatrolPath::ResetPatroller()
 {
-	if (!Patroller)
+	if (!IsValid(Patroller))
 	{
 		UE_LOG(LogTemp, Error, TEXT("[ASPatrolPath::ResetPatroller] No Patroller Found."));
 		return;
 	}
+
+	if (!IsAlive)
+	{
+		//OnSpawnedPatroller();
+		return;
+	}
 	
-	Patroller->SpawnDefaultController();
+	if (GetWorld())
+	{
+		Patroller->SpawnDefaultController();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("WORLD IS NULL"));
+		return;
+	}
+	//{
+	//	if (Patroller->Controller != nullptr || GetNetMode() == NM_Client)
+	//	{
+	//		return;
+	//	}
+
+	//	if (Patroller->AIControllerClass != nullptr)
+	//	{
+	//		FActorSpawnParameters SpawnInfo;
+	//		SpawnInfo.Instigator = GetInstigator();
+	//		SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	//		SpawnInfo.OverrideLevel = GetLevel();
+	//		SpawnInfo.ObjectFlags |= RF_Transient;	// We never want to save AI controllers into a map
+
+	//		auto World = GetWorld();
+	//		check(World);
+	//		auto ClassToSpawn = Patroller->AIControllerClass;
+
+	//		auto Count = GetWorld()->GetActorCount();
+	//		UE_LOG(LogTemp, Warning, TEXT("Actors count : %d"), Count);
+
+
+	//		if (IsValid(ClassToSpawn))
+	//		{
+	//			UE_LOG(LogTemp, Warning, TEXT("Patroller class valid."));
+	//		}
+	//		else
+	//		{
+	//			UE_LOG(LogTemp, Warning, TEXT("Patroller class not valid."));
+	//		}
+
+
+	//		AController* NewController = World->SpawnActor<AController>(ClassToSpawn, GetActorLocation(), GetActorRotation(), SpawnInfo);
+	//		if (NewController != nullptr)
+	//		{
+	//			// if successful will result in setting this->Controller 
+	//			// as part of possession mechanics
+	//			NewController->Possess(Patroller);
+	//		}
+	//	}
+	//}
+
 	auto Controller = Patroller->GetController();
 	if (!Controller)
 	{
@@ -87,7 +145,6 @@ void ASPatrolPath::ResetPatroller()
 		return;
 	}
 
-	//EnemyController->OnEnemyComponentChanged();
 	PatrollerController->MarkersLocations = MarkersLocation;
 	PatrollerController->LinkBehaviorTree();
 	OnSpawnedPatroller();
