@@ -35,6 +35,7 @@ public:
 	void OnSpawnedPatroller();
 
 	// On First Tile Shown 
+	UFUNCTION(BlueprintCallable)
 	void CreatePatroller();
 	// On Following  Tile Shown 
 	void ResetPatroller();

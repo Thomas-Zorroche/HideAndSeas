@@ -29,7 +29,7 @@ public:
 	float AlertSpeed = 0.2f;
 
 	// How long the enemy wait when he's in SearchState
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float SearchWait = 4.0f;
 
 	// How long the enemy wait when he's in PatrolState at the end of a path 
