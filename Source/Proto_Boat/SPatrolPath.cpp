@@ -5,6 +5,7 @@
 #include "Components/SEnemyComponent.h"
 #include "SPatroller.h"
 #include "SPatrollerController.h"
+#include "GameFramework/CharacterMovementComponent.h" 
 
 
 const int ASPatrolPath::MARKERS_COUNT_MAX = 10;
@@ -56,7 +57,11 @@ void ASPatrolPath::SpawnPatroller()
 	if (Patroller && IsAlive)
 	{
 		Patroller->SpawnDefaultController();
+
 		Patroller->EnemyComp = EnemyComp;
+		UCharacterMovementComponent * CharacterMovement = Patroller->GetCharacterMovement();
+		CharacterMovement->MaxWalkSpeed = EnemyComp->Speed;
+
 		auto EnemyController = Patroller->GetController();
 		auto PatrollerController = Cast<ASPatrollerController>(EnemyController);
 		if (PatrollerController)

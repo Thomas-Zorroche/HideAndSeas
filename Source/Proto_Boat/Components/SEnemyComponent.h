@@ -29,16 +29,16 @@ public:
 	float AlertSpeed = 0.2f;
 
 	// How long the enemy wait when he's in SearchState
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float SearchWait = 4.0f;
 
 	// How long the enemy wait when he's in PatrolState at the end of a path 
 	// (On a checkpoint for patrollers, at the maximum angle for cameras)
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float PatrolWait = 4.0f;
 
 	// Enemy's speed (Angular speed for cameras)
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Speed = 10.0f;
 
 	// How far the enemy can spot the player
