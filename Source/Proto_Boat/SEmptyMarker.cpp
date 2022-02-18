@@ -13,6 +13,12 @@ ASEmptyMarker::ASEmptyMarker()
 	RootComponent = SphereCollision;
 }
 
+void ASEmptyMarker::SetColor(FColor Color)
+{
+	SphereCollision->ShapeColor = Color;
+
+}
+
 // Called when the game starts or when spawned
 void ASEmptyMarker::BeginPlay()
 {

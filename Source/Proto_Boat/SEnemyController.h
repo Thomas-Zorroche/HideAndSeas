@@ -36,9 +36,6 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "SEnemyController")
 	void LinkBehaviorTree();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
-	void OnLightLevelChanged(const float currentLightIntensity);
-
 	UFUNCTION(BlueprintCallable)
 	void ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
 
@@ -54,7 +51,6 @@ public:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 
-protected:
 	UFUNCTION(BlueprintCallable)
 	void OnEnemyComponentChanged();
 
@@ -94,6 +90,5 @@ private:
 	UAIPerceptionComponent* AIPerception;
 	UAISenseConfig_Sight* SightConfig;
 
-	float CurrentLightIntensity = BaseLightIntensity;
 	FString DebugStateLabel = "PATROL";
 };
