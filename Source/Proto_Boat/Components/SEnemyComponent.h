@@ -26,7 +26,7 @@ public:
 
 	// How fast the enemy is alerted
 	UPROPERTY(EditAnywhere)
-	float AlertSpeed = 0.2f;
+	float AlertSpeed = 1.0f;
 
 	// How long the enemy wait when he's in SearchState
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -39,7 +39,7 @@ public:
 
 	// Enemy's speed (Angular speed for cameras)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float Speed = 10.0f;
+	float Speed = 600.0f;
 
 	// How far the enemy can spot the player
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

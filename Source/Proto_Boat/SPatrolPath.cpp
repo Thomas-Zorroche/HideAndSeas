@@ -66,6 +66,7 @@ void ASPatrolPath::SpawnPatroller()
 		auto PatrollerController = Cast<ASPatrollerController>(EnemyController);
 		if (PatrollerController)
 		{
+			PatrollerController->OnEnemyComponentChanged();
 			PatrollerController->MarkersLocations = MarkersLocation;
 			PatrollerController->LinkBehaviorTree();
 		}
