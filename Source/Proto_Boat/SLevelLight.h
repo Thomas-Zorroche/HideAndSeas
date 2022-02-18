@@ -4,20 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/SphereComponent.h" 
-
-#include "SEmptyMarker.generated.h"
+#include "SLevelLight.generated.h"
 
 UCLASS()
-class PROTO_BOAT_API ASEmptyMarker : public AActor
+class PROTO_BOAT_API ASLevelLight : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ASEmptyMarker();
-
-	void SetColor(FColor Color);
+	ASLevelLight();
 
 protected:
 	// Called when the game starts or when spawned
@@ -27,11 +23,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void SetIndex(int index) { Index = index; }
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "SLevelLight")
+	void OnLightTurnOn();
 
-private:
-	USphereComponent* SphereCollision;
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "SLevelLight")
+	void OnLightTurnOff();
 
-	UPROPERTY(EditAnywhere)
-	int Index = 0;
+
+	void TurnOn(bool TurnOn);
+
 };

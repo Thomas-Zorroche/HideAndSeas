@@ -54,10 +54,13 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> PatrollerClass;
 
+	bool IsAlive = true;
 
 private:
 	static const int MARKERS_COUNT_MAX;
 
 	TArray<FVector> MarkersLocation;
+
+	FColor MarkerColor = FColor(0, 0, 0);
 	
 };

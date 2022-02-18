@@ -44,19 +44,12 @@ void ASEnemyController::OnPossess(APawn* InPawn)
 	if (!InPawn)
 		return;
 
-	IIsEnemy* SightInterface = Cast<IIsEnemy>(InPawn);
-	if (SightInterface)
-	{
-		EnemyComp = SightInterface->GetEnemyComp();
-		OnEnemyComponentChanged();
-	}
+	OnEnemyComponentChanged();
 
 	if (AIPerception)
 		AIPerception->OnTargetPerceptionUpdated.AddDynamic(this, &ASEnemyController::ActorsPerceptionUpdated);
 	else
 		UE_LOG(LogTemp, Error, TEXT("No AIPerception defined!"));
-	
-	OnLightLevelChanged(CurrentLightIntensity);
 }
 
 void ASEnemyController::OnUnPossess()
@@ -90,10 +83,6 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 
 	if (!Player)
 		return;
-
-	//double DistanceToPlayer = FVector::DistSquaredXY(GetPawn()->GetActorLocation(), Player->GetActorLocation());
-	//if (DistanceToPlayer > SightConfig->SightRadius)
-	//	return;
 
 	switch (State)
 	{
@@ -130,7 +119,9 @@ void ASEnemyController::SetAIState(AIState NewState)
 		// We need to set TargetActor in the Blackboard
 		auto PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 		if (Blackboard && PlayerController)
+		{
 			Blackboard->SetValueAsObject("TargetActor", PlayerController);
+		}
 
 		OnAttack();
 	}
@@ -176,20 +167,19 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 		// DISTANCE ONLY IN XY
 		DistanceToPlayer = FVector::DistSquaredXY(GetPawn()->GetActorLocation(), PlayerCharacter->GetActorLocation());
 		if (IsValid(EnemyComp))
+		{
 			DistanceToPlayer = DistanceToPlayer / (EnemyComp->SightRadius * EnemyComp->SightRadius);
+		}
 		DistanceToPlayer = FMath::Clamp(DistanceToPlayer, 0.0f, 1.0f);
 	}
 
-	float DistanceFactor = FMath::Square(1.0f - DistanceToPlayer);
+	float DistanceFactor = FMath::Square(1.0f - FMath::Pow(DistanceToPlayer, 3));
 	
 	if (IsValid(EnemyComp))
+	{
 		AlertLevel += EnemyComp->AlertSpeed * DeltaTime * DistanceFactor;
+	}
 	AlertLevel = FMath::Clamp(AlertLevel, 0.0f, 1.0f);
-
-	// Update Light Level
-	CurrentLightIntensity = BaseLightIntensity + AlertLevel * (MaxLightIntensity - BaseLightIntensity);
-
-	OnLightLevelChanged(CurrentLightIntensity);
 }
 
 void ASEnemyController::DecreaseAlertLevel(float DeltaTime)
@@ -198,13 +188,10 @@ void ASEnemyController::DecreaseAlertLevel(float DeltaTime)
 		return;
 	
 	if (IsValid(EnemyComp))
+	{
 		AlertLevel -= EnemyComp->AlertSpeed * DeltaTime;
+	}
 	AlertLevel = FMath::Clamp(AlertLevel, 0.0f, 1.0f);
-
-	// Update Light Level
-	CurrentLightIntensity = BaseLightIntensity + AlertLevel * (MaxLightIntensity - BaseLightIntensity);
-	
-	OnLightLevelChanged(CurrentLightIntensity);
 }
 
 
