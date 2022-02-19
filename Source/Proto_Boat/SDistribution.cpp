@@ -249,11 +249,11 @@ bool ASDistribution::GenerateRandomCoordinatesInsideBox(FVector& Location, const
 		{
 			float Distance = 0.0f;
 			if (ZDistribution)
-				Distance = FVector::DistSquared(Actor->GetActorLocation(), Location);
+				Distance = FVector::Dist(Actor->GetActorLocation(), Location);
 			else
-				Distance = FVector::DistSquared2D(Actor->GetActorLocation(), Location);
+				Distance = FVector::Dist(Actor->GetActorLocation(), Location);
 
-			if (abs(Distance) < ActorData.MinDistance * ActorData.MinDistance)
+			if (abs(Distance) < ActorData.MinDistance)
 			{
 				SpawnLocationValid = false;
 				break;
