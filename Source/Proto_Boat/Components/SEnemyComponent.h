@@ -38,8 +38,8 @@ public:
 	float PatrolWait = 4.0f;
 
 	// Enemy's speed (Angular speed for cameras)
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float Speed = 600.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = "0.0", ClampMax = "375.0", UIMin = "0.0", UIMax = "375.0"))
+	float Speed = 93.5f;
 
 	// How far the enemy can spot the player
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
