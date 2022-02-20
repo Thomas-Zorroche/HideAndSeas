@@ -54,6 +54,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnEnemyComponentChanged();
 
+	UFUNCTION(BlueprintCallable)
+	void OnPlayerHideEnd();
+
 private:
 	UFUNCTION(BlueprintCallable)
 	void SetAIState(AIState NewState);
@@ -91,4 +94,6 @@ private:
 	UAISenseConfig_Sight* SightConfig;
 
 	FString DebugStateLabel = "PATROL";
+
+	bool PlayerHideInsideCone = false;
 };
