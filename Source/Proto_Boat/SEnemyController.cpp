@@ -88,7 +88,13 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 	{
 	case AIState::PATROL:
 		if (Player->isVisible)
+		{
 			SetAIState(AIState::ALERT);
+		}
+		else
+		{
+			PlayerHideInsideCone = true;
+		}
 		break;
 	case AIState::DISTRACTED:
 		if (Player->isVisible)
@@ -96,7 +102,13 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 		break;
 	case AIState::SEARCH:
 		if (Player->isVisible)
+		{
 			SetAIState(AIState::ALERT);
+		}
+		else
+		{
+			PlayerHideInsideCone = true;
+		}
 		break;
 	case AIState::ALERT:	SetAIState(AIState::SEARCH); break;
 	case AIState::ATTACK:	break;
@@ -157,7 +169,9 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 	ASTopDownCharacter* player = nullptr;
 	if (PlayerCharacter)
 		player = Cast<ASTopDownCharacter>(PlayerCharacter);
-	if (player != NULL && !player->isVisible) {
+	if (player != NULL && !player->isVisible) 
+	{
+		PlayerHideInsideCone = true;
 		SetAIState(AIState::SEARCH);
 		return;
 	}
@@ -216,4 +230,29 @@ void ASEnemyController::UpdateSightConfig()
 	ConfigSight->PeripheralVisionAngleDegrees = EnemyComp->SightAngle;
 
 	AIPerception->RequestStimuliListenerUpdate();
+}
+
+
+void ASEnemyController::OnPlayerHideEnd()
+{
+	if (PlayerHideInsideCone && (State == AIState::PATROL || State == AIState::SEARCH))
+	{
+		// Check if player is still inside cone
+		TArray<AActor*> OutActors;
+		AIPerception->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), OutActors);
+		auto PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+
+		for (auto Actor : OutActors)
+		{
+			if (IsValid(Actor) && Actor == PlayerCharacter)
+			{
+				SetAIState(AIState::ALERT);
+				return;
+			}
+		}
+	}
+	else
+	{
+		PlayerHideInsideCone = false;
+	}
 }

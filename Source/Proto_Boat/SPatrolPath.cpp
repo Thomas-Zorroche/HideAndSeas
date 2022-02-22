@@ -83,7 +83,6 @@ void ASPatrolPath::ResetPatroller()
 
 	if (!IsAlive)
 	{
-		//OnSpawnedPatroller();
 		return;
 	}
 
