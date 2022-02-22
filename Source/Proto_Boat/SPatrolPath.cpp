@@ -3,6 +3,9 @@
 
 #include "SPatrolPath.h"
 #include "Components/SEnemyComponent.h"
+#include "SPatroller.h"
+#include "SPatrollerController.h"
+#include "GameFramework/CharacterMovementComponent.h" 
 
 
 const int ASPatrolPath::MARKERS_COUNT_MAX = 10;
@@ -14,52 +17,104 @@ ASPatrolPath::ASPatrolPath()
 	PrimaryActorTick.bCanEverTick = true;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>("SceneComponent");
-
 	EnemyComp = CreateDefaultSubobject<USEnemyComponent>("EnemyComponent");
+	Patroller = nullptr;
+	MarkerColor = FColor::MakeRandomColor();
 }
 
-// Called when the game starts or when spawned
-void ASPatrolPath::BeginPlay()
+void ASPatrolPath::CreatePatroller()
 {
-	Super::BeginPlay();
-
 	TArray<AActor*> AttachedActors;
 	this->GetAttachedActors(AttachedActors);
-	UE_LOG(LogTemp, Warning, TEXT("Children at start: %d"), AttachedActors.Num());
-
-	// At least two markers in the path
-	if (AttachedActors.Num() == 0)
+	if (AttachedActors.Num() < 2)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ADD MARKERS"));
-		AddMarkerAtLocation(FVector(0, 0, 0));
-		AddMarkerAtLocation(FVector(100, 0, 0));
+		UE_LOG(LogTemp, Error, TEXT("At least 2 markers are needed for the path."));
+		return;
 	}
-	else if (AttachedActors.Num() == 1)
-		AddMarkerAtLocation(FVector(0, 0, 0));
 
-	Update();
-	OnMarkersChanged();
+	FillMarkersLocation(AttachedActors);
+	SpawnPatroller();
+	if (IsAlive)
+	{
+		OnSpawnedPatroller();
+	}
 }
 
-void ASPatrolPath::Destroyed()
-{
-	Super::Destroy();
 
-	// Destroy previous actors in the world
-	for (auto& Marker : Markers)
+void ASPatrolPath::SpawnPatroller()
+{
+	if (MarkersLocation.Num() < 2)
 	{
-		if (Marker)
+		UE_LOG(LogTemp, Error, TEXT("Cannot spawn patroller with less than 2 marker locations."));
+		return; 
+	}
+
+	FActorSpawnParameters SpawnParameters;
+	// Needed to spawn patroller inside his own level streaming
+	SpawnParameters.Owner = this; 
+	auto Actor = GetWorld()->SpawnActor<ASPatroller>(PatrollerClass, MarkersLocation[0], FRotator(EForceInit::ForceInitToZero), SpawnParameters);
+	Patroller = Cast<ASPatroller>(Actor);
+	if (Patroller && IsAlive)
+	{
+		Patroller->SpawnDefaultController();
+
+		Patroller->EnemyComp = EnemyComp;
+		UCharacterMovementComponent * CharacterMovement = Patroller->GetCharacterMovement();
+		CharacterMovement->MaxWalkSpeed = EnemyComp->Speed;
+
+		auto EnemyController = Patroller->GetController();
+		auto PatrollerController = Cast<ASPatrollerController>(EnemyController);
+		if (PatrollerController)
 		{
-			Marker->Destroy();
+			PatrollerController->OnEnemyComponentChanged();
+			PatrollerController->MarkersLocations = MarkersLocation;
+			PatrollerController->LinkBehaviorTree();
 		}
 	}
-	Markers.Empty();
 }
 
-// Called every frame
-void ASPatrolPath::Tick(float DeltaTime)
+void ASPatrolPath::ResetPatroller()
 {
-	Super::Tick(DeltaTime);
+	if (!IsValid(Patroller))
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ASPatrolPath::ResetPatroller] No Patroller Found."));
+		return;
+	}
+
+	if (!IsAlive)
+	{
+		return;
+	}
+
+	
+	if (GetWorld())
+	{
+		Patroller->SpawnDefaultController();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("WORLD IS NULL"));
+		return;
+	}
+	
+
+	auto Controller = Patroller->GetController();
+	if (!Controller)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ASPatrolPath::ResetPatroller] No Controller Found."));
+		return;
+	}
+
+	auto PatrollerController = Cast<ASPatrollerController>(Controller);
+	if (!PatrollerController)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ASPatrolPath::ResetPatroller] No PatrollerController Found."));
+		return;
+	}
+
+	PatrollerController->MarkersLocations = MarkersLocation;
+	PatrollerController->LinkBehaviorTree();
+	OnSpawnedPatroller();
 }
 
 #if WITH_EDITOR
@@ -75,38 +130,46 @@ void ASPatrolPath::PostEditChangeProperty(FPropertyChangedEvent& e)
 
 void ASPatrolPath::AddMarkerAtLocation(FVector Location)
 {
-	if (Markers.Num() >= MARKERS_COUNT_MAX)
+	if (MarkersLocation.Num() >= MARKERS_COUNT_MAX)
+	{
 		return;
+	}
+
+
+	if (MarkerColor == FColor(0, 0, 0))
+	{
+		MarkerColor = FColor::MakeRandomColor();
+	}
 
 	// Create marker
 	auto Marker = GetWorld()->SpawnActor<ASEmptyMarker>(ASEmptyMarker::StaticClass(), Location, FRotator());
 	if (Marker)
 	{
 		Marker->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
-		Marker->SetIndex(Markers.Num());
-		Markers.Add(Marker);
+		Marker->SetIndex(MarkersLocation.Num());
+		Marker->SetColor(MarkerColor);
+		MarkersLocation.Add(Marker->GetActorLocation());
 	}
 }
 
 void ASPatrolPath::AddMarker()
 {
-	AddMarkerAtLocation();
+	FVector Location = GetActorLocation();
+	Location.Z += 110.0f;
+	AddMarkerAtLocation(Location);
 }
 
-void ASPatrolPath::Update()
+void ASPatrolPath::FillMarkersLocation(const TArray<AActor*>& AttachedActors)
 {
-	Markers.Empty();
+	MarkersLocation.Empty();
 	int index = 0;
-	TArray<AActor*> AttachedActors;
-	this->GetAttachedActors(AttachedActors);
-	
 	for (auto Child : AttachedActors)
 	{
 		auto Marker = Cast<ASEmptyMarker>(Child);
 		if (Marker)
 		{
 			Marker->SetIndex(index);
-			Markers.Add(Marker);
+			MarkersLocation.Add(Marker->GetActorLocation());
 			index++;
 		}
 	}
@@ -114,13 +177,16 @@ void ASPatrolPath::Update()
 
 TArray<FVector> ASPatrolPath::GetMarkersLocation() const
 {
-	TArray<FVector> Locations;
-	for (auto Marker : Markers)
-	{
-		Locations.Add(Marker->GetActorLocation());
-	}
-	return Locations;
+	//TArray<FVector> Locations;
+	//for (auto Marker : Markers)
+	//{
+	//	Locations.Add(Marker->GetActorLocation());
+	//}
+	//return Locations;
+	return MarkersLocation;
 }
+
+
 
 
 

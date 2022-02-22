@@ -45,7 +45,7 @@ public:
 	void GenerateActorsFromGameManager();
 	
 	UFUNCTION(BlueprintCallable, Category="SDistribution")
-	TArray<FVector> GenerateActorsRandomly();
+	TArray<class ASIsland*> GenerateActorsRandomly();
 
 protected:
 	// Called when the game starts or when spawned
@@ -56,12 +56,12 @@ private:
 
 	void Reset();
 
-	void GenerateAllActors(TArray<FVector>& IslandLocations);    // All actors
-	void GenerateIslands(const TArray<class FLevelIsland>& IslandLevels);	     // Only Island Actors
+	void GenerateAllActors(TArray<class ASIsland*>& Islands);    // All actors
+	void GenerateIslands(const TArray<struct  FIslandLevel>& IslandLevels);	     // Only Island Actors
 	void GenerateOthersActors(); // Only actors that are not Island
 
-	TArray<FVector> SpawnActorsRandomly(const FActorToSpawnData& ActorData);
-	bool SpawnActor(const FVector& SpawnLocation, TSubclassOf<AActor> Class);
+	TArray<AActor*> SpawnActorsRandomly(const FActorToSpawnData& ActorData);
+	AActor* SpawnActor(const FTransform& SpawnLocation, TSubclassOf<AActor> Class);
 
 	bool GenerateRandomCoordinatesInsideBox(FVector& Location, const FActorToSpawnData& ActorData);
 

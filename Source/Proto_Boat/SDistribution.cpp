@@ -5,7 +5,6 @@
 #include <Kismet/KismetMathLibrary.h>
 #include "Kismet/GameplayStatics.h" 
 #include "GameManager.h"
-//#include "ProceduralLevels/SLevelIsland.h"
 #include "SIsland.h"
 
 // Sets default values
@@ -45,7 +44,7 @@ void ASDistribution::UpdateEditor()
 {
 	Reset();
 
-	TArray<FVector> Dummy;
+	TArray<ASIsland*> Dummy;
 	GenerateAllActors(Dummy);
 }
 
@@ -96,12 +95,12 @@ void ASDistribution::GenerateActorsFromGameManager()
 	Reset();
 
 	auto GameManager = Cast<UGameManager>(UGameplayStatics::GetGameInstance(GetWorld()));
-	if (GameManager->HasIslandLevels())
+	if (GameManager->LevelManager->HasIslandLevels())
 	{
-		//auto IslandLevels = GameManager->GetIslandLevels();
-		//GenerateIslands(IslandLevels);
-		//// We generate other actors randomly
-		//GenerateOthersActors();
+		auto IslandLevels = GameManager->LevelManager->GetIslandLevels();
+		GenerateIslands(IslandLevels);
+		// We generate other actors randomly
+		GenerateOthersActors();
 	}
 }
 
@@ -109,36 +108,53 @@ void ASDistribution::GenerateActorsFromGameManager()
 * First time we launch the game, we have to create randomly ALL actors location
 * We have to return the locations of islands
 */ 
-TArray<FVector> ASDistribution::GenerateActorsRandomly()
+TArray<ASIsland*> ASDistribution::GenerateActorsRandomly()
 {
 	Reset();
 
-	TArray<FVector> IslandLocations;
-	GenerateAllActors(IslandLocations);
-	return IslandLocations;
+	TArray<ASIsland*> Islands;
+	GenerateAllActors(Islands);
+	return Islands;
 }
 
-void ASDistribution::GenerateAllActors(TArray<FVector>& IslandLocations)
+void ASDistribution::GenerateAllActors(TArray<ASIsland*>& Islands)
 {
+	Islands.Empty();
 	for (const auto& ActorData : ActorsToSpawnData)
 	{
 		if (ActorData.Class)
 		{
-			auto IsIsland = (ActorData.Class == IslandClass);
+			bool IsIsland = (ActorData.Class == IslandClass);
 			if (IsIsland)
-				IslandLocations = SpawnActorsRandomly(ActorData);
+			{
+
+				auto SpawnedActors = SpawnActorsRandomly(ActorData);
+				for (auto Actor : SpawnedActors)
+				{
+					auto Island = Cast<ASIsland>(Actor);
+					if (Island)
+						Islands.Add(Island);
+				}
+			}
 			else
 				SpawnActorsRandomly(ActorData);
 		}
 	}
 }
 
-void ASDistribution::GenerateIslands(const TArray<FLevelIsland>& IslandLevels)
+void ASDistribution::GenerateIslands(const TArray<FIslandLevel>& IslandLevels)
 {
-	//for (auto FLevelIsland : IslandLevels)
-	//{
-	//	//SpawnActor(Island->GetWorldPosition(), IslandClass);
-	//}
+	int IslandID = 0;
+	for (auto IslandLevel : IslandLevels)
+	{
+		auto Actor = SpawnActor(IslandLevel.Transform, IslandClass);
+		auto Island = Cast<ASIsland>(Actor);
+		if (Island)
+		{
+			Island->SetID(IslandID);
+		}
+		IslandID++;
+	}
 }
 
 void ASDistribution::GenerateOthersActors()
@@ -147,22 +163,31 @@ void ASDistribution::GenerateOthersActors()
 	{
 		if (ActorData.Class)
 		{
+			bool IsIsland = (ActorData.Class == IslandClass);
+			if (IsIsland)
+				continue;
+
 			FVector SpawnLocation(0.0f, 0.0f, 0.0f);
 			bool SpawnLocationValid = GenerateRandomCoordinatesInsideBox(SpawnLocation, ActorData);
 
-			auto Island = Cast<ASIsland>(ActorData.Class);
-			if (Island)
-				continue;
 
 			SpawnActorsRandomly(ActorData);
 		}
 	}
 }
 
-TArray<FVector> ASDistribution::SpawnActorsRandomly(const FActorToSpawnData& ActorData)
+FRotator FRandomYawRotator()
+{
+	const float pitch = 0.0f;
+	const float yaw = FMath::FRandRange(-180.f, 180.f);
+	const float roll = 0.0f;
+	return FRotator(pitch, yaw, roll);
+}
+
+TArray<AActor*> ASDistribution::SpawnActorsRandomly(const FActorToSpawnData& ActorData)
 {
 	int SpawnActorCount = 0;
-	TArray<FVector> Locations;
+	TArray<AActor*> Actors;
 	for (size_t i = 0; i < ActorData.Count; i++)
 	{
 		FVector SpawnLocation(0.0f, 0.0f, 0.0f);
@@ -172,13 +197,18 @@ TArray<FVector> ASDistribution::SpawnActorsRandomly(const FActorToSpawnData& Act
 			UE_LOG(LogTemp, Error, TEXT("Spawn Location is not valid!"));
 			continue;
 		}
-		Locations.Add(SpawnLocation);
 
 		if (!ZDistribution)
 			SpawnLocation.Z = GetActorLocation().Z;
-
-		if (SpawnActor(SpawnLocation, ActorData.Class))
+		
+		auto SpawnedActor = SpawnActor(FTransform(FRandomYawRotator(), SpawnLocation), ActorData.Class);
+		if (SpawnedActor)
+		{
 			SpawnActorCount++;
+			Actors.Add(SpawnedActor);
+
+			auto Island = Cast<ASIsland>(SpawnedActor);
+		}
 	}
 
 	if (SpawnActorCount != ActorData.Count)
@@ -186,24 +216,23 @@ TArray<FVector> ASDistribution::SpawnActorsRandomly(const FActorToSpawnData& Act
 		UE_LOG(LogTemp, Error, TEXT("Only %i Actors have been created but %i were asked!"), SpawnActorCount, ActorData.Count);
 	}
 
-	return Locations;
+	return Actors;
 }
 
-bool ASDistribution::SpawnActor(const FVector& SpawnLocation, TSubclassOf<AActor> Class)
+AActor* ASDistribution::SpawnActor(const FTransform& Transform, TSubclassOf<AActor> Class)
 {
 	// Create new Actor
-	AActor* Actor = GetWorld()->SpawnActor<AActor>(Class, SpawnLocation, GetActorRotation());
+	AActor* Actor = GetWorld()->SpawnActor<AActor>(Class, Transform);
 	if (Actor)
 	{
 		Actor->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
 		ActorsInWorld.Add(Actor);
-		return true;
 	}
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("Cannot spawn Actor!"));
-		return false;
 	}
+	return Actor;
 }
 
 // Must be used only at the beginning of the game
@@ -220,11 +249,11 @@ bool ASDistribution::GenerateRandomCoordinatesInsideBox(FVector& Location, const
 		{
 			float Distance = 0.0f;
 			if (ZDistribution)
-				Distance = FVector::DistSquared(Actor->GetActorLocation(), Location);
+				Distance = FVector::Dist(Actor->GetActorLocation(), Location);
 			else
-				Distance = FVector::DistSquared2D(Actor->GetActorLocation(), Location);
+				Distance = FVector::Dist(Actor->GetActorLocation(), Location);
 
-			if (abs(Distance) < ActorData.MinDistance * ActorData.MinDistance)
+			if (abs(Distance) < ActorData.MinDistance)
 			{
 				SpawnLocationValid = false;
 				break;

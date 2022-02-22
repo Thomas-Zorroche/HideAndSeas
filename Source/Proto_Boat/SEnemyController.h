@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "SSpellDistraction.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "SEnemyController.generated.h"
@@ -15,6 +16,7 @@ enum class AIState : uint8 {
 	SEARCH = 1 UMETA(DisplayName = "SEARCH"),
 	ALERT  = 2 UMETA(DisplayName = "ALERT"),
 	ATTACK = 3 UMETA(DisplayName = "ATTACK"),
+	DISTRACTED = 4 UMETA(DisplayName = "DISTRACTED"),
 };
 
 /**
@@ -34,9 +36,6 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "SEnemyController")
 	void LinkBehaviorTree();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
-	void OnLightLevelChanged(const float currentLightIntensity);
-
 	UFUNCTION(BlueprintCallable)
 	void ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
 
@@ -46,10 +45,12 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
 	void OnAttack();
 
+	UFUNCTION(BlueprintCallable)
+	void SetAlertLevel(const float NewAlertLevel);
+
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 
-protected:
 	UFUNCTION(BlueprintCallable)
 	void OnEnemyComponentChanged();
 
@@ -65,6 +66,9 @@ private:
 public:
 	UPROPERTY(BlueprintReadWrite)
 	bool PawnFixe = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ASSpellDistraction* Distraction;
 
 protected:
 	// Value between 0.0 and 1.0. 1.0 being fully alerted --> Attack State
@@ -86,6 +90,5 @@ private:
 	UAIPerceptionComponent* AIPerception;
 	UAISenseConfig_Sight* SightConfig;
 
-	float CurrentLightIntensity = BaseLightIntensity;
 	FString DebugStateLabel = "PATROL";
 };

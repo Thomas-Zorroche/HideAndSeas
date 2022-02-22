@@ -6,7 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "Components/SphereComponent.h" 
 #include "SEmptyMarker.h"
-
 #include "SPatrolPath.generated.h"
 
 UCLASS()
@@ -22,39 +21,46 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& e) override;
 #endif
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(CallInEditor, Category = "SPatrolPath")
 	void AddMarker();
 
-	UFUNCTION(CallInEditor, Category = "SPatrolPath")
-	void Update();
+	void FillMarkersLocation(const TArray<AActor*>& AttachedActors);
 
 	UFUNCTION(BlueprintCallable)
 	TArray<FVector> GetMarkersLocation() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "SPatrolPath")
-	void OnMarkersChanged();
+	void OnSpawnedPatroller();
 
+	// On First Tile Shown 
+	void CreatePatroller();
+	// On Following  Tile Shown 
+	void ResetPatroller();
 
 private:
-	virtual void Destroyed() override;
-
 	void AddMarkerAtLocation(FVector Location = FVector(0, 0, 0));
+
+	void SpawnPatroller();
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class USEnemyComponent* EnemyComp;
 
+	UPROPERTY(BlueprintReadOnly)
+	class ASPatroller* Patroller;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> PatrollerClass;
+
+	bool IsAlive = true;
+
 private:
 	static const int MARKERS_COUNT_MAX;
 
-	// Spheres forming the path
-	TArray<ASEmptyMarker*> Markers;
+	TArray<FVector> MarkersLocation;
+
+	FColor MarkerColor = FColor(0, 0, 0);
+	
 };

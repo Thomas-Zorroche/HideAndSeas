@@ -17,6 +17,8 @@ public:
 	// Sets default values for this actor's properties
 	ASEmptyMarker();
 
+	void SetColor(FColor Color);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

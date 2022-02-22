@@ -10,6 +10,12 @@ ASPatroller::ASPatroller()
 	PrimaryActorTick.bCanEverTick = true;
 
 	EnemyComp = CreateDefaultSubobject<USEnemyComponent>("EnemyComponent");
+	
+}
+
+void ASPatroller::OnTileReload()
+{
+
 }
 
 // Called when the game starts or when spawned
