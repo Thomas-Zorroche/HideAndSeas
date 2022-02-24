@@ -114,6 +114,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	TArray<class ASPatrolPath*> GetPatrollersFromActorTile(AActor* Actor);
 
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	void AddDiscoveredIsland(uint8 islandID) { if(!DiscoveredIslands.Contains(islandID)) DiscoveredIslands.Add(islandID); }
+
 	const TArray<FIslandLevel>& GetIslandLevels() const { return Islands; }
 
 	FTile GetRandomRoom(RoomType roomType, BiomeType biome);
@@ -138,6 +141,10 @@ public:
 	// Array which contains IDs of finished islands
 	UPROPERTY(BlueprintReadOnly)
 	TArray<uint8> FinishedIslands;
+
+	// Array which contains IDs of discovered islands
+	UPROPERTY(BlueprintReadOnly)
+	TArray<uint8> DiscoveredIslands;
 
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FColor> CrystalColors;
