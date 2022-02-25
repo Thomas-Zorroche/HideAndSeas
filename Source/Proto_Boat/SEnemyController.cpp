@@ -75,7 +75,7 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 	Distraction = Cast<ASSpellDistraction>(Actor);
 
 	if (Distraction) {
-		if (State == AIState::PATROL) {
+		if (State == AIState::PATROL || State == AIState::SEARCH) {
 			SetAIState(AIState::DISTRACTED);
 		}
 		return;
