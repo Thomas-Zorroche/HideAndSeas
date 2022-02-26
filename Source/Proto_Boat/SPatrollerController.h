@@ -15,6 +15,10 @@ class PROTO_BOAT_API ASPatrollerController : public ASEnemyController
 	GENERATED_BODY()
 public:
 
+	virtual FRotator GetControlRotation() const override;
+
+public:
+
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FVector> MarkersLocations;
 };
