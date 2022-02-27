@@ -24,6 +24,12 @@ ASPatrolPath::ASPatrolPath()
 
 void ASPatrolPath::CreatePatroller()
 {
+	if (IsValid(Patroller))
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ASPatrolPath::CreatePatroller] Patroller already created."));
+		return;
+	}
+
 	TArray<AActor*> AttachedActors;
 	this->GetAttachedActors(AttachedActors);
 	if (AttachedActors.Num() < 2)
