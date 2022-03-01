@@ -31,7 +31,7 @@ void ASEnemyController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (State == AIState::SEARCH)
+	if (State == AIState::SEARCH || State == AIState::PATROL)
 		DecreaseAlertLevel(DeltaTime);
 	else if (State == AIState::ALERT)
 		IncreaseAlertLevel(DeltaTime);
