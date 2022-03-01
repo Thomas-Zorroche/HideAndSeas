@@ -19,7 +19,7 @@ void USEnemyComponent::InitializeChampi()
 	AlertSpeed = 6.5f;
 	SearchWait = 2.0f;
 	PatrolWait = 3.0f;
-	Speed = 93.5f;
+	Speed = 104.5f; // DO NOT TOUCH THIS
 
 	if (!OverrideParameters)
 	{
@@ -34,7 +34,7 @@ void USEnemyComponent::InitializeGolem()
 	AlertSpeed = 6.5f;
 	SearchWait = 2.0f;
 	PatrolWait = 1.5f;
-	Speed = 93.5f;
+	Speed = 93.5f; // DO NOT TOUCH THIS
 
 	if (!OverrideParameters)
 	{
