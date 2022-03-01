@@ -15,7 +15,13 @@ class PROTO_BOAT_API ASPatrollerController : public ASEnemyController
 	GENERATED_BODY()
 public:
 
-	virtual FRotator GetControlRotation() const override;
+	// To rotate the AI perception cone with the pawn
+	//virtual FRotator GetControlRotation() const override;
+
+	void GetActorEyesViewPoint(FVector& out_Location, FRotator& out_Rotation) const override;
+	UFUNCTION(BlueprintImplementableEvent)
+	void DeterminAISightPerceptionViewPoint(FVector& out_location, FRotator& out_Rotation) const;
+
 
 public:
 

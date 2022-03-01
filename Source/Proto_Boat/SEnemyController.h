@@ -42,8 +42,24 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
 	void OnDebugStateLabelChanged(const FString& debugStateLabel);
 
+
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
 	void OnAttack();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
+	void OnAlert();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
+	void OnSearch();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
+	void OnPatrol();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
+	void OnDistract();
+
+
 
 	UFUNCTION(BlueprintCallable)
 	void SetAlertLevel(const float NewAlertLevel);
