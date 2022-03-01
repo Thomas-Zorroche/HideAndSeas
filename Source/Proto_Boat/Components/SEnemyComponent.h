@@ -16,41 +16,49 @@ public:
 	// Sets default values for this component's properties
 	USEnemyComponent();
 
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
+	void InitializeChampi();
+	
+	void InitializeGolem();
+	
+	void InitializeCamera();
+
+	UFUNCTION(CallInEditor, Category = "SEnemyComponent"/*, meta = (EditCondition = "IsCamera && OverrideParameters")*/)
+	void ResetCamera();
 
 public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	UPROPERTY()
+	bool IsCamera = false;
+
+	UPROPERTY(EditAnywhere)
+	bool OverrideParameters = false;
 
 	// How fast the enemy is alerted
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(BlueprintReadOnly)
 	float AlertSpeed = 1.0f;
 
 	// How long the enemy wait when he's in SearchState
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly)
 	float SearchWait = 4.0f;
 
 	// How long the enemy wait when he's in PatrolState at the end of a path 
 	// (On a checkpoint for patrollers, at the maximum angle for cameras)
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly)
 	float PatrolWait = 4.0f;
 
 	// Enemy's speed (Angular speed for cameras)
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = "0.0", ClampMax = "375.0", UIMin = "0.0", UIMax = "375.0"))
+	UPROPERTY(BlueprintReadOnly)
 	float Speed = 93.5f;
 
 	// How far the enemy can spot the player
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (EditCondition = "OverrideParameters"))
 	float SightRadius = 500.0f;
 
 	// Field of view of the enemy
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (EditCondition = "OverrideParameters"))
 	float SightAngle = 60.0f;
 
 	// Patrol angle for cameras. Ignored if the pawn is not a Camera.
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (EditCondition = "IsCamera && OverrideParameters"))
 	float CameraPatrolAngle = 60.0f;
-		
+
 };

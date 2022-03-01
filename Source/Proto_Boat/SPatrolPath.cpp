@@ -6,6 +6,8 @@
 #include "SPatroller.h"
 #include "SPatrollerController.h"
 #include "GameFramework/CharacterMovementComponent.h" 
+#include "Kismet/GameplayStatics.h" 
+#include "GameManager.h"
 
 
 const int ASPatrolPath::MARKERS_COUNT_MAX = 10;
@@ -18,6 +20,7 @@ ASPatrolPath::ASPatrolPath()
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>("SceneComponent");
 	EnemyComp = CreateDefaultSubobject<USEnemyComponent>("EnemyComponent");
+
 	Patroller = nullptr;
 	MarkerColor = FColor::MakeRandomColor();
 }
@@ -55,6 +58,14 @@ void ASPatrolPath::SpawnPatroller()
 		return; 
 	}
 
+	InitializeEnemyComp();
+	InitializePatrollerClass();
+	if (!IsValid(PatrollerClass))
+	{
+		UE_LOG(LogTemp, Error, TEXT("No PatrollerClass valid."));
+		return;
+	}
+
 	FActorSpawnParameters SpawnParameters;
 	// Needed to spawn patroller inside his own level streaming
 	SpawnParameters.Owner = this; 
@@ -65,7 +76,7 @@ void ASPatrolPath::SpawnPatroller()
 		Patroller->SpawnDefaultController();
 
 		Patroller->EnemyComp = EnemyComp;
-		UCharacterMovementComponent * CharacterMovement = Patroller->GetCharacterMovement();
+		UCharacterMovementComponent* CharacterMovement = Patroller->GetCharacterMovement();
 		CharacterMovement->MaxWalkSpeed = EnemyComp->Speed;
 
 		auto EnemyController = Patroller->GetController();
@@ -123,13 +134,57 @@ void ASPatrolPath::ResetPatroller()
 	OnSpawnedPatroller();
 }
 
+void ASPatrolPath::InitializeEnemyComp()
+{
+	switch (PatrollerType)
+	{
+	case EPatrollerType::Champi:
+		EnemyComp->InitializeChampi(); 
+		break;
+	case EPatrollerType::Golem:
+		EnemyComp->InitializeGolem();
+		break;
+	default:
+		EnemyComp->InitializeChampi();
+		break;
+	}
+}
+
+void ASPatrolPath::InitializePatrollerClass()
+{
+	auto GameManager = Cast<UGameManager>(UGameplayStatics::GetGameInstance(GetWorld()));
+	if (!IsValid(GameManager))
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ASPatrolPath::InitializeEnemyComp] No GameManager found."));
+		return;
+	}
+
+	switch (PatrollerType)
+	{
+	case EPatrollerType::Champi:
+		PatrollerClass = GameManager->ChampiClass;
+		break;
+	case EPatrollerType::Golem:
+		PatrollerClass = GameManager->GolemClass;
+		break;
+	default:
+		PatrollerClass = GameManager->ChampiClass;
+		break;
+	}
+}
+
 #if WITH_EDITOR
 void ASPatrolPath::PostEditChangeProperty(FPropertyChangedEvent& e)
 {
 	Super::PostEditChangeProperty(e);
 	
 	FName PropertyName = (e.Property != NULL) ? e.Property->GetFName() : NAME_None;
-	UE_LOG(LogTemp, Warning, TEXT("Prop Changed: %s"), *PropertyName.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("Prop Changed: %s"), *PropertyName.ToString());
+
+	if (PropertyName == "PatrollerType")
+	{
+		InitializeEnemyComp();
+	}
 }
 #endif
 
@@ -183,14 +238,11 @@ void ASPatrolPath::FillMarkersLocation(const TArray<AActor*>& AttachedActors)
 
 TArray<FVector> ASPatrolPath::GetMarkersLocation() const
 {
-	//TArray<FVector> Locations;
-	//for (auto Marker : Markers)
-	//{
-	//	Locations.Add(Marker->GetActorLocation());
-	//}
-	//return Locations;
 	return MarkersLocation;
 }
+
+
+
 
 
 
