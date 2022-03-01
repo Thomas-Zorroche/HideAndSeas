@@ -8,6 +8,14 @@
 #include "SEmptyMarker.h"
 #include "SPatrolPath.generated.h"
 
+UENUM(BlueprintType)
+enum class EPatrollerType : uint8 
+{
+	Golem = 0   UMETA(DisplayName = "Golem"),
+	Champi = 1  UMETA(DisplayName = "Champi"),
+};
+
+
 UCLASS()
 class PROTO_BOAT_API ASPatrolPath : public AActor
 {
@@ -44,6 +52,10 @@ private:
 
 	void SpawnPatroller();
 
+	void InitializeEnemyComp();
+
+	void InitializePatrollerClass();
+
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class USEnemyComponent* EnemyComp;
@@ -52,12 +64,15 @@ public:
 	class ASPatroller* Patroller;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<AActor> PatrollerClass;
+	EPatrollerType PatrollerType;
+
 
 	bool IsAlive = true;
 
 private:
 	static const int MARKERS_COUNT_MAX;
+	
+	TSubclassOf<AActor> PatrollerClass;
 
 	TArray<FVector> MarkersLocation;
 

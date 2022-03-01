@@ -486,7 +486,14 @@ TArray<ASPatrolPath*> USLevelManager::GetPatrollersFromActorTile(AActor* Actor)
 	check(Actor);
 	FIntPoint TileCoord;
 	GetGridCoordFromWorldLocation(TileCoord, Actor->GetActorLocation());
-	return Islands[CurrentIslandID].Grid[TileCoord.Y][TileCoord.X].PatrollerPaths;
+	if (CheckIslandIDValid())
+	{
+		return Islands[CurrentIslandID].Grid[TileCoord.Y][TileCoord.X].PatrollerPaths;
+	}
+	else
+	{
+		return TArray<ASPatrolPath*>();
+	}
 }
 
 

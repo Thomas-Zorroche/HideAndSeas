@@ -27,5 +27,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GameManager")
 	USLevelManager* LevelManager = nullptr;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> ChampiClass;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> GolemClass;
+
 };
 

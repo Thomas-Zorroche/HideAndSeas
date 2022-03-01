@@ -31,7 +31,7 @@ void ASEnemyController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (State == AIState::SEARCH)
+	if (State == AIState::SEARCH || State == AIState::PATROL)
 		DecreaseAlertLevel(DeltaTime);
 	else if (State == AIState::ALERT)
 		IncreaseAlertLevel(DeltaTime);
@@ -75,7 +75,7 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 	Distraction = Cast<ASSpellDistraction>(Actor);
 
 	if (Distraction) {
-		if (State == AIState::PATROL) {
+		if (State == AIState::PATROL || State == AIState::SEARCH) {
 			SetAIState(AIState::DISTRACTED);
 		}
 		return;
@@ -140,15 +140,17 @@ void ASEnemyController::SetAIState(AIState NewState)
 
 	// Set State to Blackboard
 	if (Blackboard)
+	{
 		Blackboard->SetValueAsEnum("State", static_cast<uint8>(State));
+	}
 
 	switch (State)
 	{
-	case AIState::PATROL: DebugStateLabel = "PATROL"; break;
-	case AIState::SEARCH: DebugStateLabel = "SEARCH"; break;
-	case AIState::ALERT:  DebugStateLabel = "ALERT"; break;
-	case AIState::ATTACK: DebugStateLabel = "ATTACK"; break;
-	case AIState::DISTRACTED: DebugStateLabel = "DISTRACTED"; break;
+		case AIState::PATROL:		DebugStateLabel = "PATROL"; OnPatrol();  break;
+		case AIState::SEARCH:		DebugStateLabel = "SEARCH"; OnSearch(); break;
+		case AIState::ALERT:		DebugStateLabel = "ALERT"; OnAlert(); break;
+		case AIState::ATTACK:		DebugStateLabel = "ATTACK"; OnAttack(); break;
+		case AIState::DISTRACTED:	DebugStateLabel = "DISTRACTED"; OnDistract(); break;
 	}
 
 	OnDebugStateLabelChanged(DebugStateLabel);

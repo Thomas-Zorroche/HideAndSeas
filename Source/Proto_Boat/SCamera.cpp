@@ -10,6 +10,7 @@ ASCamera::ASCamera()
 	PrimaryActorTick.bCanEverTick = true;
 
 	EnemyComp = CreateDefaultSubobject<USEnemyComponent>("EnemyComponent");
+	EnemyComp->InitializeCamera();
 }
 
 // Called when the game starts or when spawned
