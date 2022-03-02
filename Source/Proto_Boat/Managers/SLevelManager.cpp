@@ -5,6 +5,7 @@
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
 #include "../SPatroller.h"
+#include "../SCamera.h"
 
 #include "../SIsland.h"
 #include "../Interfaces/SLevelLoaded.h"
@@ -362,10 +363,12 @@ void USLevelManager::OnTileShown()
 	// If there is at least one, find all patrol paths on the map
 	TArray<AActor*> PatrolPaths;
 	TArray<AActor*> LevelLights;
+	TArray<AActor*> Cameras;
 	if (NeedToSearchForActors)
 	{
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASPatrolPath::StaticClass(), PatrolPaths);
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASLevelLight::StaticClass(), LevelLights);
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASCamera::StaticClass(), Cameras);
 	}
 
 	// Update Tiles
@@ -373,7 +376,7 @@ void USLevelManager::OnTileShown()
 	{
 		if (Tile->FirstTimeShown) 
 		{
-			Tile->FillActors(PatrolPaths, LevelLights, GetWorld()->GetStreamingLevels());
+			Tile->FillActors(PatrolPaths, Cameras, LevelLights, GetWorld()->GetStreamingLevels());
 		}
 		Tile->OnTileShown();
 	}
@@ -384,7 +387,7 @@ void USLevelManager::OnTileShown()
 		GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 		FTimerDelegate TimerDel;
 		TimerDel.BindUFunction(this, FName("UpdateGridVisibility"));
-		GetWorld()->GetTimerManager().SetTimer(GridTimerHandle, TimerDel, 5.f, true /* loop */);
+		GetWorld()->GetTimerManager().SetTimer(GridTimerHandle, TimerDel, 1.f, true /* loop */);
 
 		// Warn all actors that implements LevelLoaded interface
 		TArray<AActor*> Actors;
@@ -410,7 +413,7 @@ void USLevelManager::GetGridCoordFromWorldLocation(FIntPoint& TileCoord, const F
 
 void USLevelManager::UpdateGridVisibility()
 {
-	UE_LOG(LogTemp, Warning, TEXT("UPDATE ___________________"));
+	//UE_LOG(LogTemp, Warning, TEXT("UPDATE"));
 
 	auto Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	if (!Player)
@@ -442,6 +445,9 @@ void USLevelManager::UpdateGridVisibility()
 			FTile& Tile = CurrentIslandLevel.Grid[idx][idy];
 			ULevelStreaming* StreamingLevel = StreamedLevels[Tile.GridID];
 			bool ShouldBeVisible = ShouldTileBeVisible(FIntPoint(idx, idy), CurrentPlayerGridCoord, 2);
+
+			// This is needed if we want to disable some state (for example show vision cone) if enemies are not in the playe tile
+			Tile.SetPlayerTile(CurrentPlayerGridCoord == FIntPoint(idy, idx));
 
 			if (ShouldBeVisible && StreamingLevel->GetShouldBeVisibleFlag())
 			{
@@ -501,7 +507,7 @@ TArray<ASPatrolPath*> USLevelManager::GetPatrollersFromActorTile(AActor* Actor)
 
 // FTile Functions
 
-void FTile::FillActors(TArray<AActor*> PatrollerPathActors, TArray<AActor*> LevelLightActors, const TArray<ULevelStreaming*>& StreamingLevels)
+void FTile::FillActors(TArray<AActor*> PatrollerPathActors, TArray<AActor*> CameraActors, TArray<AActor*> LevelLightActors, const TArray<ULevelStreaming*>& StreamingLevels)
 {
 	if (Type != TileType::PT_LEVELROOM)
 		return;
@@ -524,6 +530,19 @@ void FTile::FillActors(TArray<AActor*> PatrollerPathActors, TArray<AActor*> Leve
 			if (PatrolPath)
 			{
 				PatrollerPaths.Add(PatrolPath);
+			}
+		}
+	}
+
+	// Retrieve all Cameras inside the tile
+	for (auto Actor : CameraActors)
+	{
+		if (TileBox.IsInsideXY(Actor->GetActorLocation()))
+		{
+			auto Camera = Cast<ASCamera>(Actor);
+			if (Camera)
+			{
+				Cameras.Add(Camera);
 			}
 		}
 	}
@@ -583,6 +602,34 @@ void FTile::OnTileShown()
 			{
 				UE_LOG(LogTemp, Warning, TEXT("RESET Patroller"));
 				PatrollerPath->ResetPatroller();
+			}
+		}
+	}
+}
+
+
+void FTile::SetPlayerTile(bool IsPlayerTile)
+{
+	for (auto PatrollerPath : PatrollerPaths)
+	{
+		if (IsValid(PatrollerPath))
+		{
+			if (IsPlayerTile != PatrollerPath->Patroller->InsidePlayerTile)
+			{
+				PatrollerPath->Patroller->InsidePlayerTile = IsPlayerTile;
+				PatrollerPath->Patroller->OnPlayerTileChanged();
+			}
+		}
+	}
+
+	for (auto Camera : Cameras)
+	{
+		if (IsValid(Camera))
+		{
+			if (IsPlayerTile != Camera->InsidePlayerTile)
+			{
+				Camera->InsidePlayerTile = IsPlayerTile;
+				Camera->OnPlayerTileChanged();
 			}
 		}
 	}

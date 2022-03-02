@@ -44,4 +44,10 @@ USEnemyComponent* ASPatroller::GetEnemyComp()
 	return EnemyComp;
 }
 
+bool ASPatroller::IsInsidePlayerTile()
+{
+	return InsidePlayerTile;
+}
+
+
 

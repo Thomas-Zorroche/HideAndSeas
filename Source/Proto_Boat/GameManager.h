@@ -33,5 +33,13 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> GolemClass;
 
+	UPROPERTY(BlueprintReadOnly)
+	uint8 WizardCrystalID;
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<uint8> CrystalsInBag;
+
+	UPROPERTY(BlueprintReadWrite)
+	FLinearColor CurrentCrystalColor;
 };
 

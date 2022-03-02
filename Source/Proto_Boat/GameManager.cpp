@@ -11,6 +11,9 @@ void UGameManager::Init()
 
 	LevelManager = NewObject<USLevelManager>(this, USLevelManager::StaticClass());
 	LevelManager->Initialize();
+
+	WizardCrystalID = FMath::FRandRange(0, 7);
+	CurrentCrystalColor = { 1., 1., 1., 1. };
 }
 
 void UGameManager::Shutdown()

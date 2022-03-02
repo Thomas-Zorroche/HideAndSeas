@@ -39,3 +39,7 @@ USEnemyComponent* ASCamera::GetEnemyComp()
 	return EnemyComp;
 }
 
+bool ASCamera::IsInsidePlayerTile()
+{
+	return InsidePlayerTile;
+}
