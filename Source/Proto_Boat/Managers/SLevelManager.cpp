@@ -387,7 +387,7 @@ void USLevelManager::OnTileShown()
 		GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 		FTimerDelegate TimerDel;
 		TimerDel.BindUFunction(this, FName("UpdateGridVisibility"));
-		GetWorld()->GetTimerManager().SetTimer(GridTimerHandle, TimerDel, 5.f, true /* loop */);
+		GetWorld()->GetTimerManager().SetTimer(GridTimerHandle, TimerDel, 1.f, true /* loop */);
 
 		// Warn all actors that implements LevelLoaded interface
 		TArray<AActor*> Actors;
@@ -413,7 +413,7 @@ void USLevelManager::GetGridCoordFromWorldLocation(FIntPoint& TileCoord, const F
 
 void USLevelManager::UpdateGridVisibility()
 {
-	UE_LOG(LogTemp, Warning, TEXT("UPDATE ___________________"));
+	//UE_LOG(LogTemp, Warning, TEXT("UPDATE"));
 
 	auto Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	if (!Player)
