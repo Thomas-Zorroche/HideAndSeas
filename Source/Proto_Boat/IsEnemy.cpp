@@ -10,3 +10,9 @@ class USEnemyComponent* IIsEnemy::GetEnemyComp()
 {
 	return NULL;
 }
+
+
+bool IIsEnemy::IsInsidePlayerTile()
+{
+	return false;
+}

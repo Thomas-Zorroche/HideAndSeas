@@ -29,12 +29,21 @@ public:
 
 	virtual class USEnemyComponent* GetEnemyComp() override;
 
+	virtual bool IsInsidePlayerTile() override;
+
+
 	void OnTileReload();
 
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "SPatroller")
 	void OnRoomComplete();
 
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "SPatroller")
+	void OnPlayerTileChanged();
+
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class USEnemyComponent* EnemyComp;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool InsidePlayerTile = false;
 };
