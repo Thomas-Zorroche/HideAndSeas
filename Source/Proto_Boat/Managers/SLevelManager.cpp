@@ -614,8 +614,11 @@ void FTile::SetPlayerTile(bool IsPlayerTile)
 	{
 		if (IsValid(PatrollerPath))
 		{
-			PatrollerPath->Patroller->InsidePlayerTile = IsPlayerTile;
-			PatrollerPath->Patroller->OnPlayerTileChanged();
+			if (IsPlayerTile != PatrollerPath->Patroller->InsidePlayerTile)
+			{
+				PatrollerPath->Patroller->InsidePlayerTile = IsPlayerTile;
+				PatrollerPath->Patroller->OnPlayerTileChanged();
+			}
 		}
 	}
 
@@ -623,8 +626,11 @@ void FTile::SetPlayerTile(bool IsPlayerTile)
 	{
 		if (IsValid(Camera))
 		{
-			Camera->InsidePlayerTile = IsPlayerTile;
-			Camera->OnPlayerTileChanged();
+			if (IsPlayerTile != Camera->InsidePlayerTile)
+			{
+				Camera->InsidePlayerTile = IsPlayerTile;
+				Camera->OnPlayerTileChanged();
+			}
 		}
 	}
 }
