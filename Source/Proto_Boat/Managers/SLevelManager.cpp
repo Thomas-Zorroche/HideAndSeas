@@ -442,6 +442,12 @@ void USLevelManager::UpdateGridVisibility()
 	{
 		for (size_t idy = 0; idy < CurrentIslandLevel.Grid.Num(); idy++)
 		{
+			if (idx == 2 && idy == 2)
+			{	
+				// Start Tile always visible (jail)
+				continue;
+			}
+
 			FTile& Tile = CurrentIslandLevel.Grid[idx][idy];
 			ULevelStreaming* StreamingLevel = StreamedLevels[Tile.GridID];
 			bool ShouldBeVisible = ShouldTileBeVisible(FIntPoint(idx, idy), CurrentPlayerGridCoord, 2);
