@@ -77,7 +77,7 @@ void ASPatrolPath::SpawnPatroller()
 
 		Patroller->EnemyComp = EnemyComp;
 		UCharacterMovementComponent* CharacterMovement = Patroller->GetCharacterMovement();
-		CharacterMovement->MaxWalkSpeed = EnemyComp->Speed;
+		CharacterMovement->MaxWalkSpeed = EnemyComp->PatrolWalkSpeed;
 
 		auto EnemyController = Patroller->GetController();
 		auto PatrollerController = Cast<ASPatrollerController>(EnemyController);

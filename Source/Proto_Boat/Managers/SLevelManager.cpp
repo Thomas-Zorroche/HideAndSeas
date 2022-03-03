@@ -502,6 +502,28 @@ TArray<ASPatrolPath*> USLevelManager::GetPatrollersFromActorTile(AActor* Actor)
 	}
 }
 
+TArray<AActor*> USLevelManager::GetAllEnemiesFromPlayerTile()
+{
+	auto ActorsOut = TArray<AActor*>();
+
+	if (CheckIslandIDValid())
+	{
+		TArray<AActor*> Patrollers;
+		for (auto PatrolPath : Islands[CurrentIslandID].Grid[CurrentPlayerGridCoord.Y][CurrentPlayerGridCoord.X].PatrollerPaths)
+		{
+			Patrollers.Add(PatrolPath->Patroller);
+		}
+
+		ActorsOut.Append(Patrollers);
+		ActorsOut.Append(Islands[CurrentIslandID].Grid[CurrentPlayerGridCoord.Y][CurrentPlayerGridCoord.X].Cameras);
+	}
+
+	UE_LOG(LogTemp, Error, TEXT("Actor in Player Tile : %d"), ActorsOut.Num());
+
+
+	return ActorsOut;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////
 

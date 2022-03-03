@@ -19,7 +19,7 @@ void ASCameraController::UpdateDirection(float DeltaTime)
 {
 	if (!PawnFixe && State == AIState::PATROL)
 	{
-		CurrentAngle += (DeltaTime * EnemyComp->Speed) * Sign;
+		CurrentAngle += (DeltaTime * EnemyComp->PatrolWalkSpeed) * Sign;
 
 		if (FMath::Abs(CurrentAngle) > EnemyComp->CameraPatrolAngle)
 		{
