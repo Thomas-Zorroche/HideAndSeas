@@ -217,6 +217,7 @@ void USLevelManager::InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType
 	// Update Tiles along Path coord to be Playable Tiles (Rooms and Transitions)
 	FVector2D PreviousCoord = FVector2D(2, 2);
 	Grid[PreviousCoord.X][PreviousCoord.Y] = GetRandomRoom(RoomPath[0], Biome);
+	Grid[PreviousCoord.X][PreviousCoord.Y].IsCompleted = true; // Start Room completed by default
 	FVector2D StartTransitionCoord = GetTransitionCoordinate(RoomPath[0], PreviousCoord);
 	Grid[StartTransitionCoord.X][StartTransitionCoord.Y] = GetRandomTile(TileType::PT_TRANSITION, Biome);
 
@@ -442,13 +443,13 @@ void USLevelManager::UpdateGridVisibility()
 	{
 		for (size_t idy = 0; idy < CurrentIslandLevel.Grid.Num(); idy++)
 		{
+			FTile& Tile = CurrentIslandLevel.Grid[idx][idy];
 			if (idx == 2 && idy == 2)
 			{	
 				// Start Tile always visible (jail)
 				continue;
 			}
 
-			FTile& Tile = CurrentIslandLevel.Grid[idx][idy];
 			ULevelStreaming* StreamingLevel = StreamedLevels[Tile.GridID];
 			bool ShouldBeVisible = ShouldTileBeVisible(FIntPoint(idx, idy), CurrentPlayerGridCoord, 2);
 
