@@ -270,8 +270,8 @@ FTransform USLevelManager::GetTileTransformFromGridCoordinates(int idx, int idy)
 
 bool ShouldTileBeVisible(FIntPoint Tile, FIntPoint PlayerTile, int NeighboursCount = 2)
 {
-	return FMath::Abs((int)Tile.X - PlayerTile.Y) <= NeighboursCount
-		&& FMath::Abs((int)Tile.Y - PlayerTile.X) <= NeighboursCount;
+	return FMath::Abs((int)Tile.Y - PlayerTile.Y) <= NeighboursCount
+		&& FMath::Abs((int)Tile.X - PlayerTile.X) <= NeighboursCount;
 }
 
 void USLevelManager::LoadLevelTiles()
@@ -317,7 +317,7 @@ void USLevelManager::LoadLevelTiles()
 			}
 
 			LevelInstance->SetShouldBeLoaded(true);
-			if (ShouldTileBeVisible(FIntPoint(idx, idy), CurrentPlayerGridCoord))
+			if (ShouldTileBeVisible(FIntPoint(idy, idx), CurrentPlayerGridCoord))
 			{
 				TilesToUpdate.Add(&Tile);
 				LevelInstance->SetShouldBeVisible(true);
@@ -451,9 +451,9 @@ void USLevelManager::UpdateGridVisibility()
 			}
 
 			ULevelStreaming* StreamingLevel = StreamedLevels[Tile.GridID];
-			bool ShouldBeVisible = ShouldTileBeVisible(FIntPoint(idx, idy), CurrentPlayerGridCoord, 2);
+			bool ShouldBeVisible = ShouldTileBeVisible(FIntPoint(idy, idx), CurrentPlayerGridCoord, 2);
 
-			// This is needed if we want to disable some state (for example show vision cone) if enemies are not in the playe tile
+			// This is needed if we want to disable some state (for example show vision cone) if enemies are not in the player tile
 			Tile.SetPlayerTile(CurrentPlayerGridCoord == FIntPoint(idy, idx));
 
 			if (ShouldBeVisible && StreamingLevel->GetShouldBeVisibleFlag())

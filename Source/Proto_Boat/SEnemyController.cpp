@@ -200,12 +200,9 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 	}
 	AlertLevel = FMath::Clamp(AlertLevel, 0.0f, 1.0f);
 	
-	UE_LOG(LogTemp, Error, TEXT("Increase Alert: %f"), AlertLevel);
 
 	if (AlertLevel == 0.0f)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Alert 0"));
-
 		SetAIState(AIState::SEARCH);
 	}
 }
