@@ -387,7 +387,7 @@ void USLevelManager::OnTileShown()
 		GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 		FTimerDelegate TimerDel;
 		TimerDel.BindUFunction(this, FName("UpdateGridVisibility"));
-		GetWorld()->GetTimerManager().SetTimer(GridTimerHandle, TimerDel, 5.f, true /* loop */);
+		GetWorld()->GetTimerManager().SetTimer(GridTimerHandle, TimerDel, 1.f, true /* loop */);
 
 		// Warn all actors that implements LevelLoaded interface
 		TArray<AActor*> Actors;
@@ -413,7 +413,7 @@ void USLevelManager::GetGridCoordFromWorldLocation(FIntPoint& TileCoord, const F
 
 void USLevelManager::UpdateGridVisibility()
 {
-	UE_LOG(LogTemp, Warning, TEXT("UPDATE ___________________"));
+	//UE_LOG(LogTemp, Warning, TEXT("UPDATE"));
 
 	auto Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	if (!Player)
@@ -442,6 +442,12 @@ void USLevelManager::UpdateGridVisibility()
 	{
 		for (size_t idy = 0; idy < CurrentIslandLevel.Grid.Num(); idy++)
 		{
+			if (idx == 2 && idy == 2)
+			{	
+				// Start Tile always visible (jail)
+				continue;
+			}
+
 			FTile& Tile = CurrentIslandLevel.Grid[idx][idy];
 			ULevelStreaming* StreamingLevel = StreamedLevels[Tile.GridID];
 			bool ShouldBeVisible = ShouldTileBeVisible(FIntPoint(idx, idy), CurrentPlayerGridCoord, 2);
@@ -500,6 +506,28 @@ TArray<ASPatrolPath*> USLevelManager::GetPatrollersFromActorTile(AActor* Actor)
 	{
 		return TArray<ASPatrolPath*>();
 	}
+}
+
+TArray<AActor*> USLevelManager::GetAllEnemiesFromPlayerTile()
+{
+	auto ActorsOut = TArray<AActor*>();
+
+	if (CheckIslandIDValid())
+	{
+		TArray<AActor*> Patrollers;
+		for (auto PatrolPath : Islands[CurrentIslandID].Grid[CurrentPlayerGridCoord.Y][CurrentPlayerGridCoord.X].PatrollerPaths)
+		{
+			Patrollers.Add(PatrolPath->Patroller);
+		}
+
+		ActorsOut.Append(Patrollers);
+		ActorsOut.Append(Islands[CurrentIslandID].Grid[CurrentPlayerGridCoord.Y][CurrentPlayerGridCoord.X].Cameras);
+	}
+
+	UE_LOG(LogTemp, Error, TEXT("Actor in Player Tile : %d"), ActorsOut.Num());
+
+
+	return ActorsOut;
 }
 
 

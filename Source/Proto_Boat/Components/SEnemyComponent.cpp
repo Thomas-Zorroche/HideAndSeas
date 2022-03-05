@@ -19,7 +19,11 @@ void USEnemyComponent::InitializeChampi()
 	AlertSpeed = 6.5f;
 	SearchWait = 2.0f;
 	PatrolWait = 3.0f;
-	Speed = 104.5f; // DO NOT TOUCH THIS
+
+	{   // DO NOT TOUCH THIS
+		PatrolWalkSpeed = 104.5f; 
+		AttackWalkSpeed = 425.0f;
+	}
 
 	if (!OverrideParameters)
 	{
@@ -34,7 +38,11 @@ void USEnemyComponent::InitializeGolem()
 	AlertSpeed = 6.5f;
 	SearchWait = 2.0f;
 	PatrolWait = 1.5f;
-	Speed = 93.5f; // DO NOT TOUCH THIS
+
+	{   // DO NOT TOUCH THIS
+		PatrolWalkSpeed = 93.5f;
+		AttackWalkSpeed = 375.0f;
+	}
 
 	if (!OverrideParameters)
 	{
@@ -51,7 +59,7 @@ void USEnemyComponent::InitializeCamera()
 	AlertSpeed = 6.5f;
 	SearchWait = 0.5f;
 	PatrolWait = 0.5f;
-	Speed = 130.0f;
+	PatrolWalkSpeed = 130.0f;
 
 	SightRadius = 650.0f;
 	SightAngle = 30.0f;
