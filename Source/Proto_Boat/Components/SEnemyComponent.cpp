@@ -22,7 +22,7 @@ void USEnemyComponent::InitializeChampi()
 
 	{   // DO NOT TOUCH THIS
 		PatrolWalkSpeed = 104.5f; 
-		AttackWalkSpeed = 425.0f;
+		AttackWalkSpeed = 480.0f;
 	}
 
 	if (!OverrideParameters)
@@ -41,7 +41,7 @@ void USEnemyComponent::InitializeGolem()
 
 	{   // DO NOT TOUCH THIS
 		PatrolWalkSpeed = 93.5f;
-		AttackWalkSpeed = 375.0f;
+		AttackWalkSpeed = 460.0f;
 	}
 
 	if (!OverrideParameters)
