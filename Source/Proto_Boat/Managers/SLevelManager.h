@@ -41,7 +41,7 @@ public:
 
 	TArray<ASLevelLight*> LevelLights;
 
-	void FillActors(TArray<AActor*> PatrollerPathActors, TArray<AActor*> Cameras,  TArray<AActor*> LevelLightActors, const TArray<ULevelStreaming*>& StreamingLevels);
+	void FillActors(const TArray<ULevelStreaming*>& StreamingLevels);
 
 	void OnTileShown();
 

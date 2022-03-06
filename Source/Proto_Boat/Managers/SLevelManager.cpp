@@ -341,43 +341,21 @@ void USLevelManager::OnTileShown()
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("TILES UPDATE"));
+	UE_LOG(LogTemp, Warning, TEXT("TILE UPDATE"));
 
 	// Retrieve only LevelRooms
 	const auto LevelRoomTiles = TilesToUpdate.FilterByPredicate([](FTile* Tile)
-		{
-			return Tile->Type == TileType::PT_LEVELROOM;
-		});
-
-
-	// Search if one tile is FirstTimeShow
-	bool NeedToSearchForActors = false;
-	for (FTile* Tile : LevelRoomTiles)
 	{
-		if (Tile->FirstTimeShown)
-		{
-			NeedToSearchForActors = true;
-			break;
-		}
-	}
+		return Tile->Type == TileType::PT_LEVELROOM;
+	});
 
-	// If there is at least one, find all patrol paths on the map
-	TArray<AActor*> PatrolPaths;
-	TArray<AActor*> LevelLights;
-	TArray<AActor*> Cameras;
-	if (NeedToSearchForActors)
-	{
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASPatrolPath::StaticClass(), PatrolPaths);
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASLevelLight::StaticClass(), LevelLights);
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASCamera::StaticClass(), Cameras);
-	}
 
 	// Update Tiles
 	for (FTile* Tile : LevelRoomTiles)
 	{
 		if (Tile->FirstTimeShown) 
 		{
-			Tile->FillActors(PatrolPaths, Cameras, LevelLights, GetWorld()->GetStreamingLevels());
+			Tile->FillActors(GetWorld()->GetStreamingLevels());
 		}
 		Tile->OnTileShown();
 	}
@@ -454,7 +432,10 @@ void USLevelManager::UpdateGridVisibility()
 			bool ShouldBeVisible = ShouldTileBeVisible(FIntPoint(idy, idx), CurrentPlayerGridCoord, 2);
 
 			// This is needed if we want to disable some state (for example show vision cone) if enemies are not in the player tile
-			Tile.SetPlayerTile(CurrentPlayerGridCoord == FIntPoint(idy, idx));
+			if (ShouldBeVisible)
+			{
+				Tile.SetPlayerTile(CurrentPlayerGridCoord == FIntPoint(idy, idx));
+			}
 
 			if (ShouldBeVisible && StreamingLevel->GetShouldBeVisibleFlag())
 			{
@@ -536,56 +517,53 @@ TArray<AActor*> USLevelManager::GetAllEnemiesFromPlayerTile()
 
 // FTile Functions
 
-void FTile::FillActors(TArray<AActor*> PatrollerPathActors, TArray<AActor*> CameraActors, TArray<AActor*> LevelLightActors, const TArray<ULevelStreaming*>& StreamingLevels)
+void FTile::FillActors(const TArray<ULevelStreaming*>& StreamingLevels)
 {
 	if (Type != TileType::PT_LEVELROOM)
 		return;
 
 	const auto StreamingLevel = StreamingLevels[GridID];
-	FBox TileBox = ALevelBounds::CalculateLevelBounds(StreamingLevel->GetLoadedLevel());
-
-	if (!TileBox.IsValid)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[FTile::FillActors] FBox Invalid."));
-		return;
-	}
 
 	// Retrieve all Patroller Paths inside the tile
-	for (auto Actor : PatrollerPathActors)
+	const auto PatrolPathActors = StreamingLevel->GetLoadedLevel()->Actors.FilterByPredicate([](AActor* Actor)
 	{
-		if (TileBox.IsInsideXY(Actor->GetActorLocation()))
+		return Cast<ASPatrolPath>(Actor);
+	});
+	for (const auto Actor : PatrolPathActors)
+	{
+		auto PatrolPath = Cast<ASPatrolPath>(Actor);
+		if (PatrolPath)
 		{
-			auto PatrolPath = Cast<ASPatrolPath>(Actor);
-			if (PatrolPath)
-			{
-				PatrollerPaths.Add(PatrolPath);
-			}
+			PatrollerPaths.Add(PatrolPath);
 		}
 	}
 
+
 	// Retrieve all Cameras inside the tile
-	for (auto Actor : CameraActors)
+	const auto CameraActors = StreamingLevel->GetLoadedLevel()->Actors.FilterByPredicate([](AActor* Actor)
 	{
-		if (TileBox.IsInsideXY(Actor->GetActorLocation()))
+		return Cast<ASCamera>(Actor);
+	});
+	for (const auto Actor : CameraActors)
+	{
+		auto Camera = Cast<ASCamera>(Actor);
+		if (Camera)
 		{
-			auto Camera = Cast<ASCamera>(Actor);
-			if (Camera)
-			{
-				Cameras.Add(Camera);
-			}
+			Cameras.Add(Camera);
 		}
 	}
 
 	// Retrieve all LevelLight inside the tile
-	for (auto Actor : LevelLightActors)
+	const auto LevelLightActors = StreamingLevel->GetLoadedLevel()->Actors.FilterByPredicate([](AActor* Actor)
 	{
-		if (TileBox.IsInsideXY(Actor->GetActorLocation()))
+		return Cast<ASLevelLight>(Actor);
+	});
+	for (const auto Actor : LevelLightActors)
+	{
+		auto LevelLight = Cast<ASLevelLight>(Actor);
+		if (LevelLight)
 		{
-			auto LevelLight = Cast<ASLevelLight>(Actor);
-			if (LevelLight)
-			{
-				LevelLights.Add(LevelLight);
-			}
+			LevelLights.Add(LevelLight);
 		}
 	}
 }
@@ -641,7 +619,7 @@ void FTile::SetPlayerTile(bool IsPlayerTile)
 {
 	for (auto PatrollerPath : PatrollerPaths)
 	{
-		if (IsValid(PatrollerPath))
+		if (IsValid(PatrollerPath) && IsValid(PatrollerPath->Patroller))
 		{
 			if (IsPlayerTile != PatrollerPath->Patroller->InsidePlayerTile)
 			{
