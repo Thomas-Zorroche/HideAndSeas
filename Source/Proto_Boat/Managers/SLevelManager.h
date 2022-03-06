@@ -189,7 +189,7 @@ private:
 
 	TArray<FTile*> TilesToUpdate;
 
-	const int LEVELROOMS_COUNT = 6;
+	const int LEVELROOMS_COUNT = 5;
 
 	FIntPoint CurrentPlayerGridCoord;
 
