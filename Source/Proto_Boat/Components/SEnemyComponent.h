@@ -47,7 +47,11 @@ public:
 
 	// Enemy's speed (Angular speed for cameras)
 	UPROPERTY(BlueprintReadOnly)
-	float Speed = 93.5f;
+	float PatrolWalkSpeed = 93.5f;
+
+	// Enemy's speed when attacking
+	UPROPERTY(BlueprintReadOnly)
+	float AttackWalkSpeed = 375.5f;
 
 	// How far the enemy can spot the player
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (EditCondition = "OverrideParameters"))

@@ -217,6 +217,7 @@ void USLevelManager::InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType
 	// Update Tiles along Path coord to be Playable Tiles (Rooms and Transitions)
 	FVector2D PreviousCoord = FVector2D(2, 2);
 	Grid[PreviousCoord.X][PreviousCoord.Y] = GetRandomRoom(RoomPath[0], Biome);
+	Grid[PreviousCoord.X][PreviousCoord.Y].IsCompleted = true; // Start Room completed by default
 	FVector2D StartTransitionCoord = GetTransitionCoordinate(RoomPath[0], PreviousCoord);
 	Grid[StartTransitionCoord.X][StartTransitionCoord.Y] = GetRandomTile(TileType::PT_TRANSITION, Biome);
 
@@ -269,8 +270,8 @@ FTransform USLevelManager::GetTileTransformFromGridCoordinates(int idx, int idy)
 
 bool ShouldTileBeVisible(FIntPoint Tile, FIntPoint PlayerTile, int NeighboursCount = 2)
 {
-	return FMath::Abs((int)Tile.X - PlayerTile.Y) <= NeighboursCount
-		&& FMath::Abs((int)Tile.Y - PlayerTile.X) <= NeighboursCount;
+	return FMath::Abs((int)Tile.Y - PlayerTile.Y) <= NeighboursCount
+		&& FMath::Abs((int)Tile.X - PlayerTile.X) <= NeighboursCount;
 }
 
 void USLevelManager::LoadLevelTiles()
@@ -316,7 +317,7 @@ void USLevelManager::LoadLevelTiles()
 			}
 
 			LevelInstance->SetShouldBeLoaded(true);
-			if (ShouldTileBeVisible(FIntPoint(idx, idy), CurrentPlayerGridCoord))
+			if (ShouldTileBeVisible(FIntPoint(idy, idx), CurrentPlayerGridCoord))
 			{
 				TilesToUpdate.Add(&Tile);
 				LevelInstance->SetShouldBeVisible(true);
@@ -443,10 +444,16 @@ void USLevelManager::UpdateGridVisibility()
 		for (size_t idy = 0; idy < CurrentIslandLevel.Grid.Num(); idy++)
 		{
 			FTile& Tile = CurrentIslandLevel.Grid[idx][idy];
-			ULevelStreaming* StreamingLevel = StreamedLevels[Tile.GridID];
-			bool ShouldBeVisible = ShouldTileBeVisible(FIntPoint(idx, idy), CurrentPlayerGridCoord, 2);
+			if (idx == 2 && idy == 2)
+			{	
+				// Start Tile always visible (jail)
+				continue;
+			}
 
-			// This is needed if we want to disable some state (for example show vision cone) if enemies are not in the playe tile
+			ULevelStreaming* StreamingLevel = StreamedLevels[Tile.GridID];
+			bool ShouldBeVisible = ShouldTileBeVisible(FIntPoint(idy, idx), CurrentPlayerGridCoord, 2);
+
+			// This is needed if we want to disable some state (for example show vision cone) if enemies are not in the player tile
 			Tile.SetPlayerTile(CurrentPlayerGridCoord == FIntPoint(idy, idx));
 
 			if (ShouldBeVisible && StreamingLevel->GetShouldBeVisibleFlag())
@@ -500,6 +507,28 @@ TArray<ASPatrolPath*> USLevelManager::GetPatrollersFromActorTile(AActor* Actor)
 	{
 		return TArray<ASPatrolPath*>();
 	}
+}
+
+TArray<AActor*> USLevelManager::GetAllEnemiesFromPlayerTile()
+{
+	auto ActorsOut = TArray<AActor*>();
+
+	if (CheckIslandIDValid())
+	{
+		TArray<AActor*> Patrollers;
+		for (auto PatrolPath : Islands[CurrentIslandID].Grid[CurrentPlayerGridCoord.Y][CurrentPlayerGridCoord.X].PatrollerPaths)
+		{
+			Patrollers.Add(PatrolPath->Patroller);
+		}
+
+		ActorsOut.Append(Patrollers);
+		ActorsOut.Append(Islands[CurrentIslandID].Grid[CurrentPlayerGridCoord.Y][CurrentPlayerGridCoord.X].Cameras);
+	}
+
+	UE_LOG(LogTemp, Error, TEXT("Actor in Player Tile : %d"), ActorsOut.Num());
+
+
+	return ActorsOut;
 }
 
 

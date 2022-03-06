@@ -84,6 +84,9 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 	if (!Player)
 		return;
 
+	UE_LOG(LogTemp, Error, TEXT("STATE: %d"), (uint8)State);
+
+
 	switch (State)
 	{
 	case AIState::PATROL:
@@ -158,7 +161,7 @@ void ASEnemyController::SetAIState(AIState NewState)
 
 void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 {
-	if (AlertLevel == 1.0f)
+	if (AlertLevel >= 1.0f)
 	{
 		SetAIState(AIState::ATTACK);
 		return;
@@ -196,6 +199,12 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 		AlertLevel += EnemyComp->AlertSpeed * DeltaTime * DistanceFactor;
 	}
 	AlertLevel = FMath::Clamp(AlertLevel, 0.0f, 1.0f);
+	
+
+	if (AlertLevel == 0.0f)
+	{
+		SetAIState(AIState::SEARCH);
+	}
 }
 
 void ASEnemyController::DecreaseAlertLevel(float DeltaTime)

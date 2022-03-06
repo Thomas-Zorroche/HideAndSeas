@@ -41,7 +41,7 @@ public:
 
 	TArray<ASLevelLight*> LevelLights;
 
-	void FillActors(TArray<AActor*> PatrollerPathActors, TArray<AActor*> Cameras, TArray<AActor*> LevelLightActors, const TArray<ULevelStreaming*>& StreamingLevels);
+	void FillActors(TArray<AActor*> PatrollerPathActors, TArray<AActor*> Cameras,  TArray<AActor*> LevelLightActors, const TArray<ULevelStreaming*>& StreamingLevels);
 
 	void OnTileShown();
 
@@ -119,6 +119,9 @@ public:
 	TArray<class ASPatrolPath*> GetPatrollersFromActorTile(AActor* Actor);
 
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	TArray<AActor*> GetAllEnemiesFromPlayerTile();
+
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	void AddDiscoveredIsland(uint8 islandID) { if(!DiscoveredIslands.Contains(islandID)) DiscoveredIslands.Add(islandID); }
 
 	const TArray<FIslandLevel>& GetIslandLevels() const { return Islands; }
@@ -186,7 +189,7 @@ private:
 
 	TArray<FTile*> TilesToUpdate;
 
-	const int LEVELROOMS_COUNT = 6;
+	const int LEVELROOMS_COUNT = 5;
 
 	FIntPoint CurrentPlayerGridCoord;
 

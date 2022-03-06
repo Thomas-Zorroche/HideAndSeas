@@ -59,7 +59,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
 	void OnDistract();
 
-
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "SEnemyController")
+	void OnPlayerCaught();
 
 	UFUNCTION(BlueprintCallable)
 	void SetAlertLevel(const float NewAlertLevel);
@@ -95,12 +96,6 @@ protected:
 	float AlertLevel = 0.0f;
 
 	class USEnemyComponent* EnemyComp;
-
-	// SPOT LIGHT - TEMP
-	UPROPERTY(EditAnywhere)
-	float BaseLightIntensity = 500.0f;
-	UPROPERTY(EditAnywhere)
-	float MaxLightIntensity = 5000.0f;
 
 	// State of the enemy
 	AIState State = AIState::PATROL;
