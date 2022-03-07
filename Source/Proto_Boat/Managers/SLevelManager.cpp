@@ -31,10 +31,22 @@ void USLevelManager::ClearGridTimer()
 
 void USLevelManager::InitializeCrystalColors()
 {
+	TArray<FLinearColor> ColorsPool = {
+			{ 0.937500, 0.498337, 0.089520, 1.000000 }, // sunny orange
+			{ 0.073642, 0.937500, 0.322586, 1.000000 }, // minty green
+			{ 0.514107, 0.202738, 0.937500, 1.000000 }, // secret violet
+			{ 0.059842, 0.126752, 0.937500, 1.000000 }, // profond blue
+			{ 0.937500, 0.124603, 0.341917, 1.000000 }, // sweet pink
+			{ 0.971199, 1.000000, 0.030634, 1.000000 }, // acid yellow
+			{ 0.000000, 0.630208, 0.539326, 1.000000 }  // emeraude blue
+	};
+
 	for (const auto Island : Islands)
 	{
-		FColor RandomColor = FColor::MakeRandomColor();
-		CrystalColors.Add(RandomColor);
+		uint8 RandomId = FMath::RandRange(0, ColorsPool.Num() - 1);
+		FLinearColor RandomColor = ColorsPool[RandomId];
+		ColorsPool.RemoveAt(RandomId);
+		CrystalColors.Add(RandomColor.ToFColor(true));
 	}
 }
 
