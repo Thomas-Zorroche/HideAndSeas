@@ -32,4 +32,17 @@ FTransform UGameManager::GetBoatSpawnPosition(TArray<ASIsland*> ActorIslands)
 	return FTransform();
 }
 
+int UGameManager::GetMaximumMana() const
+{
+	FLinearColor FirstColor = { 1., 1., 1., 1. };
+
+	if (CurrentCrystalColor == LevelManager->CrystalColors[WizardCrystalID])
+		return 150;
+
+	if (CurrentCrystalColor == FirstColor)
+		return 30;
+
+	return 100;
+}
+
 

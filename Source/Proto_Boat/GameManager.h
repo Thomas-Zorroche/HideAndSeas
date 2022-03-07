@@ -21,6 +21,9 @@ public:
 	// Return Exit Island Position. Needed when player leave an island.
 	UFUNCTION(BlueprintCallable, Category = "GameManager")
 	FTransform GetBoatSpawnPosition(TArray<ASIsland*> Islands);
+	
+	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	int GetMaximumMana() const;
 
 public:
 
@@ -41,5 +44,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite)
 	FLinearColor CurrentCrystalColor;
+
+
 };
 
