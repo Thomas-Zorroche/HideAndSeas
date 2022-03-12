@@ -485,6 +485,10 @@ void USLevelManager::CompleteRoom(FVector TriggerWorldLocation)
 		Path->Patroller->OnRoomComplete();
 		Path->IsAlive = false;
 	}
+
+	for (auto Camera : Tile.Cameras) {
+		Camera->OnRoomComplete();
+	}
 }
 
 TArray<ASPatrolPath*> USLevelManager::GetPatrollersFromActorTile(AActor* Actor)
