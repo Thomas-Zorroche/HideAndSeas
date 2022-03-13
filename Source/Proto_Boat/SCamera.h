@@ -31,7 +31,10 @@ public:
 
 	virtual bool IsInsidePlayerTile() override;
 
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "SPatroller")
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "SCamera")
+	void OnRoomComplete();
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "SCamera")
 	void OnPlayerTileChanged();
 
 public:
@@ -40,4 +43,7 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool InsidePlayerTile = false;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool IsAlive = true;
 };

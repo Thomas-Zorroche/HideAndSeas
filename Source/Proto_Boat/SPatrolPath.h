@@ -66,7 +66,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	EPatrollerType PatrollerType;
 
-
+	UPROPERTY(BlueprintReadOnly)
 	bool IsAlive = true;
 
 private:
