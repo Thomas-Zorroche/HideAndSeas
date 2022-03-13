@@ -43,4 +43,7 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool InsidePlayerTile = false;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool IsAlive = true;
 };
