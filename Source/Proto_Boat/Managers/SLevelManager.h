@@ -46,6 +46,8 @@ public:
 	void OnTileShown();
 
 	void SetPlayerTile(bool IsPlayerTile);
+
+	void CompleteRoom();
 };
 
 

@@ -474,17 +474,8 @@ void USLevelManager::CompleteRoom(FVector TriggerWorldLocation)
 	FIntPoint gridCoord;
 	GetGridCoordFromWorldLocation(gridCoord, TriggerWorldLocation);
 	FTile& Tile = Islands[CurrentIslandID].Grid[gridCoord.Y][gridCoord.X];
-	Tile.IsCompleted = true;
 
-	for (auto Light : Tile.LevelLights)
-	{
-		Light->TurnOn(true);
-	}
-
-	for (auto Path : Tile.PatrollerPaths) {
-		Path->Patroller->OnRoomComplete();
-		Path->IsAlive = false;
-	}
+	Tile.CompleteRoom();
 }
 
 TArray<ASPatrolPath*> USLevelManager::GetPatrollersFromActorTile(AActor* Actor)
@@ -518,9 +509,6 @@ TArray<AActor*> USLevelManager::GetAllEnemiesFromPlayerTile()
 		ActorsOut.Append(Islands[CurrentIslandID].Grid[CurrentPlayerGridCoord.Y][CurrentPlayerGridCoord.X].Cameras);
 	}
 
-	UE_LOG(LogTemp, Error, TEXT("Actor in Player Tile : %d"), ActorsOut.Num());
-
-
 	return ActorsOut;
 }
 
@@ -541,6 +529,7 @@ void FTile::FillActors(const TArray<ULevelStreaming*>& StreamingLevels)
 	{
 		return Cast<ASPatrolPath>(Actor);
 	});
+	PatrollerPaths.Empty();
 	for (const auto Actor : PatrolPathActors)
 	{
 		auto PatrolPath = Cast<ASPatrolPath>(Actor);
@@ -556,6 +545,7 @@ void FTile::FillActors(const TArray<ULevelStreaming*>& StreamingLevels)
 	{
 		return Cast<ASCamera>(Actor);
 	});
+	Cameras.Empty();
 	for (const auto Actor : CameraActors)
 	{
 		auto Camera = Cast<ASCamera>(Actor);
@@ -570,6 +560,7 @@ void FTile::FillActors(const TArray<ULevelStreaming*>& StreamingLevels)
 	{
 		return Cast<ASLevelLight>(Actor);
 	});
+	LevelLights.Empty();
 	for (const auto Actor : LevelLightActors)
 	{
 		auto LevelLight = Cast<ASLevelLight>(Actor);
@@ -612,6 +603,11 @@ void FTile::OnTileShown()
 			}
 		}
 		FirstTimeShown = false;
+
+		if (IsCompleted)
+		{
+			CompleteRoom();
+		}
 	}
 	else
 	{
@@ -653,3 +649,30 @@ void FTile::SetPlayerTile(bool IsPlayerTile)
 		}
 	}
 }
+
+void FTile::CompleteRoom()
+{
+	IsCompleted = true;
+
+	for (auto Light : LevelLights)
+	{
+		Light->TurnOn(true);
+	}
+
+	for (auto Path : PatrollerPaths) {
+		if (IsValid(Path->Patroller))
+		{
+			Path->IsAlive = false;
+			Path->Patroller->OnRoomComplete();
+		}
+	}
+
+	for (auto Camera : Cameras) {
+		if (IsValid(Camera))
+		{
+			Camera->IsAlive = false;
+			Camera->OnRoomComplete();
+		}
+	}
+}
+
