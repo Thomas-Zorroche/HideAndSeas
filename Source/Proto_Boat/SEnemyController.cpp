@@ -186,6 +186,13 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 	{
 		// DISTANCE ONLY IN XY
 		DistanceToPlayer = FVector::DistSquaredXY(GetPawn()->GetActorLocation(), PlayerCharacter->GetActorLocation());
+		if (DistanceToPlayer > EnemyComp->SightRadius * EnemyComp->SightRadius * 1.25f)
+		{
+			SetAIState(AIState::SEARCH);
+			AlertLevel = 0.0f;
+			return;
+		}
+
 		if (IsValid(EnemyComp))
 		{
 			DistanceToPlayer = DistanceToPlayer / (EnemyComp->SightRadius * EnemyComp->SightRadius * 1.1f);
@@ -202,10 +209,6 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 	AlertLevel = FMath::Clamp(AlertLevel, 0.0f, 1.0f);
 	
 
-	if (AlertLevel == 0.0f)
-	{
-		//SetAIState(AIState::SEARCH);
-	}
 }
 
 void ASEnemyController::DecreaseAlertLevel(float DeltaTime)
