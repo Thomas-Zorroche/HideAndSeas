@@ -509,9 +509,6 @@ TArray<AActor*> USLevelManager::GetAllEnemiesFromPlayerTile()
 		ActorsOut.Append(Islands[CurrentIslandID].Grid[CurrentPlayerGridCoord.Y][CurrentPlayerGridCoord.X].Cameras);
 	}
 
-	UE_LOG(LogTemp, Error, TEXT("Actor in Player Tile : %d"), ActorsOut.Num());
-
-
 	return ActorsOut;
 }
 

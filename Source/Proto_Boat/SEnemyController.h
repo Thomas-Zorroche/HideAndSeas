@@ -90,6 +90,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ASSpellDistraction* Distraction;
 
+	// State of the enemy
+	UPROPERTY(BlueprintReadOnly)
+	AIState State = AIState::PATROL;
+
 protected:
 	// Value between 0.0 and 1.0. 1.0 being fully alerted --> Attack State
 	UPROPERTY(BlueprintReadOnly)
@@ -97,8 +101,6 @@ protected:
 
 	class USEnemyComponent* EnemyComp;
 
-	// State of the enemy
-	AIState State = AIState::PATROL;
 
 private:
 	UAIPerceptionComponent* AIPerception;
