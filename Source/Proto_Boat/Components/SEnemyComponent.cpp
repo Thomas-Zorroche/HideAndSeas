@@ -16,7 +16,7 @@ USEnemyComponent::USEnemyComponent()
 
 void USEnemyComponent::InitializeChampi()
 {
-	AlertSpeed = 6.5f;
+	AlertSpeed = 2.5f;
 	SearchWait = 2.0f;
 	PatrolWait = 3.0f;
 
@@ -35,7 +35,7 @@ void USEnemyComponent::InitializeChampi()
 
 void USEnemyComponent::InitializeGolem()
 {
-	AlertSpeed = 6.5f;
+	AlertSpeed = 2.5f;
 	SearchWait = 2.0f;
 	PatrolWait = 1.5f;
 
