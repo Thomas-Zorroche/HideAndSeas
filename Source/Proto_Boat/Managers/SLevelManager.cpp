@@ -4,6 +4,7 @@
 #include "Engine/LevelBounds.h" 
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h" 
 #include "../SPatroller.h"
 #include "../SCamera.h"
 
@@ -326,6 +327,7 @@ void USLevelManager::LoadLevelTiles()
 				Tile.FirstTimeShown = true;
 				Tile.PatrollerPaths.Empty();
 				Tile.LevelLights.Empty();
+				Tile.Cameras.Empty();
 			}
 
 			LevelInstance->SetShouldBeLoaded(true);
@@ -419,6 +421,8 @@ void USLevelManager::UpdateGridVisibility()
 	CurrentPlayerGridCoord = NewPlayerGridCoord;
 	UE_LOG(LogTemp, Warning, TEXT("UPDATE GRID: NEW TILE : %d , %d"), CurrentPlayerGridCoord.X, CurrentPlayerGridCoord.Y);
 
+	
+
 	if (!CheckIslandIDValid())
 		return;
 
@@ -437,16 +441,24 @@ void USLevelManager::UpdateGridVisibility()
 			if (idx == 2 && idy == 2)
 			{	
 				// Start Tile always visible (jail)
+				Player->GetCharacterMovement()->MaxWalkSpeed = 600.0f ;
 				continue;
 			}
 
 			ULevelStreaming* StreamingLevel = StreamedLevels[Tile.GridID];
 			bool ShouldBeVisible = ShouldTileBeVisible(FIntPoint(idy, idx), CurrentPlayerGridCoord, 2);
 
+
+
 			// This is needed if we want to disable some state (for example show vision cone) if enemies are not in the player tile
 			if (ShouldBeVisible)
 			{
-				Tile.SetPlayerTile(CurrentPlayerGridCoord == FIntPoint(idy, idx));
+				bool PlayerTile = CurrentPlayerGridCoord == FIntPoint(idy, idx);
+				Tile.SetPlayerTile(PlayerTile);
+				if (PlayerTile)
+				{
+					Player->GetCharacterMovement()->MaxWalkSpeed = Tile.IsCompleted ? 600.0f : 450.0f;
+				}
 			}
 
 			if (ShouldBeVisible && StreamingLevel->GetShouldBeVisibleFlag())
@@ -474,6 +486,9 @@ void USLevelManager::CompleteRoom(FVector TriggerWorldLocation)
 	FIntPoint gridCoord;
 	GetGridCoordFromWorldLocation(gridCoord, TriggerWorldLocation);
 	FTile& Tile = Islands[CurrentIslandID].Grid[gridCoord.Y][gridCoord.X];
+	
+	auto Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	Player->GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 
 	Tile.CompleteRoom();
 }
@@ -549,7 +564,7 @@ void FTile::FillActors(const TArray<ULevelStreaming*>& StreamingLevels)
 	for (const auto Actor : CameraActors)
 	{
 		auto Camera = Cast<ASCamera>(Actor);
-		if (Camera)
+		if (IsValid(Camera))
 		{
 			Cameras.Add(Camera);
 		}
@@ -576,7 +591,7 @@ void FTile::OnTileShown()
 	if (Type != TileType::PT_LEVELROOM)
 		return;
 
-	if (PatrollerPaths.Num() == 0 && LevelLights.Num() == 0)
+	if (PatrollerPaths.Num() == 0 && LevelLights.Num() == 0 && Cameras.Num() == 0)
 	{
 		FirstTimeShown = false;
 		return;
@@ -625,6 +640,11 @@ void FTile::OnTileShown()
 
 void FTile::SetPlayerTile(bool IsPlayerTile)
 {
+	//if (IsCompleted)
+	//{
+	//	return;
+	//}
+
 	for (auto PatrollerPath : PatrollerPaths)
 	{
 		if (IsValid(PatrollerPath) && IsValid(PatrollerPath->Patroller))
