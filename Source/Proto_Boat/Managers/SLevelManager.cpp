@@ -327,6 +327,7 @@ void USLevelManager::LoadLevelTiles()
 				Tile.FirstTimeShown = true;
 				Tile.PatrollerPaths.Empty();
 				Tile.LevelLights.Empty();
+				Tile.Cameras.Empty();
 			}
 
 			LevelInstance->SetShouldBeLoaded(true);
@@ -563,7 +564,7 @@ void FTile::FillActors(const TArray<ULevelStreaming*>& StreamingLevels)
 	for (const auto Actor : CameraActors)
 	{
 		auto Camera = Cast<ASCamera>(Actor);
-		if (Camera)
+		if (IsValid(Camera))
 		{
 			Cameras.Add(Camera);
 		}
@@ -590,7 +591,7 @@ void FTile::OnTileShown()
 	if (Type != TileType::PT_LEVELROOM)
 		return;
 
-	if (PatrollerPaths.Num() == 0 && LevelLights.Num() == 0)
+	if (PatrollerPaths.Num() == 0 && LevelLights.Num() == 0 && Cameras.Num() == 0)
 	{
 		FirstTimeShown = false;
 		return;
@@ -639,6 +640,11 @@ void FTile::OnTileShown()
 
 void FTile::SetPlayerTile(bool IsPlayerTile)
 {
+	//if (IsCompleted)
+	//{
+	//	return;
+	//}
+
 	for (auto PatrollerPath : PatrollerPaths)
 	{
 		if (IsValid(PatrollerPath) && IsValid(PatrollerPath->Patroller))
