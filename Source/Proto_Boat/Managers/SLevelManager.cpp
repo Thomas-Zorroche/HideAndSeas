@@ -112,6 +112,7 @@ void USLevelManager::GenerateIslands(TArray<ASIsland*> IslandActors, bool IsMari
 		Islands.Add(level);
 
 		Island->SetID(islandId);
+		Island->OnIDReady();
 	}
 	InitializeCrystalColors();
 }
@@ -357,7 +358,7 @@ void USLevelManager::OnTileShown()
 {
 	TilesShownNum++;
 	// Wait until all tiles are shown (tiles of any type in the TilesToUpdate list)
-	int MaxTiles = OnLevelBegin ? 23 : 10;
+	int MaxTiles = OnLevelBegin ? 24 : 10;
 	UE_LOG(LogTemp, Warning, TEXT("RECEIVE UNIQUE DELEGATE : %d / %d"), TilesShownNum, MaxTiles);
 	if (TilesShownNum != MaxTiles)
 	{
@@ -427,8 +428,6 @@ void USLevelManager::UpdateGridVisibility()
 
 	CurrentPlayerGridCoord = NewPlayerGridCoord;
 	UE_LOG(LogTemp, Warning, TEXT("UPDATE GRID: NEW TILE : %d , %d"), CurrentPlayerGridCoord.X, CurrentPlayerGridCoord.Y);
-
-	
 
 	if (!CheckIslandIDValid())
 		return;

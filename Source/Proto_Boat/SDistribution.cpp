@@ -152,6 +152,7 @@ void ASDistribution::GenerateIslands(const TArray<FIslandLevel>& IslandLevels)
 		if (Island)
 		{
 			Island->SetID(IslandID);
+			Island->OnIDReady();
 		}
 		IslandID++;
 	}
