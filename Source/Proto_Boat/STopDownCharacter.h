@@ -29,4 +29,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool isVisible = true;
 
+	UPROPERTY(BlueprintReadWrite)
+	bool DebugMode = false;
+
+
 };

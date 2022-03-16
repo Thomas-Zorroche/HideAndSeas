@@ -35,6 +35,8 @@ public:
 	// True first time the level streaming is shown. False after. 
 	bool FirstTimeShown = true;
 
+	bool EndRoom = false;
+
 	TArray<ASPatrolPath*> PatrollerPaths;
 
 	TArray<class ASCamera*> Cameras;

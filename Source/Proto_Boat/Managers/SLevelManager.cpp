@@ -250,6 +250,7 @@ void USLevelManager::InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType
 	int x = NextCoord.X;
 	int y = NextCoord.Y;
 	Grid[x][y] = GetRandomRoom(RoomPath.Last(0), Biome);
+	Grid[x][y].EndRoom = true;
 }
 
 float USLevelManager::GetTileLocationFromGridCoordinate(int id)
@@ -292,6 +293,12 @@ void USLevelManager::LoadLevelTiles()
 	if (!CheckIslandIDValid())
 		return;
 
+	auto Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	if (Player)
+	{
+		Player->GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+	}
+
 	TilesToUpdate.Empty();
 	TilesShownNum = 0;
 	OnLevelBegin = true;
@@ -307,6 +314,8 @@ void USLevelManager::LoadLevelTiles()
 			// Special case for water ( (0,2) & (1,2) )
 			if (idy == 2 && (idx == 0 || idx == 1))
 			{
+				FTile& Tile = CurrentIslandLevel.Grid[idx][idy];
+				Tile.IsCompleted = true;
 				continue;
 			}
 
@@ -331,7 +340,7 @@ void USLevelManager::LoadLevelTiles()
 			}
 
 			LevelInstance->SetShouldBeLoaded(true);
-			if (ShouldTileBeVisible(FIntPoint(idy, idx), CurrentPlayerGridCoord))
+			if (ShouldTileBeVisible(FIntPoint(idy, idx), CurrentPlayerGridCoord) || Tile.EndRoom)
 			{
 				TilesToUpdate.Add(&Tile);
 				LevelInstance->SetShouldBeVisible(true);
@@ -406,8 +415,6 @@ void USLevelManager::GetGridCoordFromWorldLocation(FIntPoint& TileCoord, const F
 
 void USLevelManager::UpdateGridVisibility()
 {
-	//UE_LOG(LogTemp, Warning, TEXT("UPDATE"));
-
 	auto Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	if (!Player)
 		return;
@@ -438,17 +445,14 @@ void USLevelManager::UpdateGridVisibility()
 		for (size_t idy = 0; idy < CurrentIslandLevel.Grid.Num(); idy++)
 		{
 			FTile& Tile = CurrentIslandLevel.Grid[idx][idy];
-			if (idx == 2 && idy == 2)
+			if (idx == 2 && idy == 2 || Tile.EndRoom)
 			{	
-				// Start Tile always visible (jail)
-				Player->GetCharacterMovement()->MaxWalkSpeed = 600.0f ;
+				// Start and End Tiles always visible
 				continue;
 			}
 
 			ULevelStreaming* StreamingLevel = StreamedLevels[Tile.GridID];
 			bool ShouldBeVisible = ShouldTileBeVisible(FIntPoint(idy, idx), CurrentPlayerGridCoord, 2);
-
-
 
 			// This is needed if we want to disable some state (for example show vision cone) if enemies are not in the player tile
 			if (ShouldBeVisible)
