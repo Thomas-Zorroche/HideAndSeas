@@ -45,4 +45,17 @@ int UGameManager::GetMaximumMana() const
 	return 100;
 }
 
+int UGameManager::GetMaximumManaFromColor(const FLinearColor& Color) const
+{
+	FLinearColor FirstColor = { 1., 1., 1., 1. };
+
+	if (Color == LevelManager->CrystalColors[WizardCrystalID])
+		return 150;
+
+	if (Color == FirstColor)
+		return 30;
+
+	return 100;
+}
+
 

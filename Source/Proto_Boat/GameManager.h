@@ -25,6 +25,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "GameManager")
 	int GetMaximumMana() const;
 
+	UFUNCTION(BlueprintCallable, Category = "GameManager")
+	int GetMaximumManaFromColor(const FLinearColor& Color) const;
+
+
 public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GameManager")
