@@ -16,13 +16,13 @@ USEnemyComponent::USEnemyComponent()
 
 void USEnemyComponent::InitializeChampi()
 {
-	AlertSpeed = 6.5f;
+	AlertSpeed = 3.5f;
 	SearchWait = 2.0f;
 	PatrolWait = 3.0f;
 
 	{   // DO NOT TOUCH THIS
-		PatrolWalkSpeed = 104.5f; 
-		AttackWalkSpeed = 480.0f;
+		PatrolWalkSpeed = 137.0f; 
+		AttackWalkSpeed = 550.0f;
 	}
 
 	if (!OverrideParameters)
@@ -35,13 +35,13 @@ void USEnemyComponent::InitializeChampi()
 
 void USEnemyComponent::InitializeGolem()
 {
-	AlertSpeed = 6.5f;
+	AlertSpeed = 3.5f;
 	SearchWait = 2.0f;
 	PatrolWait = 1.5f;
 
 	{   // DO NOT TOUCH THIS
-		PatrolWalkSpeed = 93.5f;
-		AttackWalkSpeed = 460.0f;
+		PatrolWalkSpeed = 125.0f;
+		AttackWalkSpeed = 500.0f;
 	}
 
 	if (!OverrideParameters)

@@ -4,6 +4,7 @@
 #include "Engine/LevelBounds.h" 
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h" 
 #include "../SPatroller.h"
 #include "../SCamera.h"
 
@@ -111,6 +112,7 @@ void USLevelManager::GenerateIslands(TArray<ASIsland*> IslandActors, bool IsMari
 		Islands.Add(level);
 
 		Island->SetID(islandId);
+		Island->OnIDReady();
 	}
 	InitializeCrystalColors();
 }
@@ -249,6 +251,7 @@ void USLevelManager::InitializeGrid(TArray<TArray<FTile>>& Grid, TArray<RoomType
 	int x = NextCoord.X;
 	int y = NextCoord.Y;
 	Grid[x][y] = GetRandomRoom(RoomPath.Last(0), Biome);
+	Grid[x][y].EndRoom = true;
 }
 
 float USLevelManager::GetTileLocationFromGridCoordinate(int id)
@@ -291,6 +294,12 @@ void USLevelManager::LoadLevelTiles()
 	if (!CheckIslandIDValid())
 		return;
 
+	auto Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	if (Player)
+	{
+		Player->GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+	}
+
 	TilesToUpdate.Empty();
 	TilesShownNum = 0;
 	OnLevelBegin = true;
@@ -306,6 +315,8 @@ void USLevelManager::LoadLevelTiles()
 			// Special case for water ( (0,2) & (1,2) )
 			if (idy == 2 && (idx == 0 || idx == 1))
 			{
+				FTile& Tile = CurrentIslandLevel.Grid[idx][idy];
+				Tile.IsCompleted = true;
 				continue;
 			}
 
@@ -326,10 +337,11 @@ void USLevelManager::LoadLevelTiles()
 				Tile.FirstTimeShown = true;
 				Tile.PatrollerPaths.Empty();
 				Tile.LevelLights.Empty();
+				Tile.Cameras.Empty();
 			}
 
 			LevelInstance->SetShouldBeLoaded(true);
-			if (ShouldTileBeVisible(FIntPoint(idy, idx), CurrentPlayerGridCoord))
+			if (ShouldTileBeVisible(FIntPoint(idy, idx), CurrentPlayerGridCoord) || Tile.EndRoom)
 			{
 				TilesToUpdate.Add(&Tile);
 				LevelInstance->SetShouldBeVisible(true);
@@ -346,7 +358,7 @@ void USLevelManager::OnTileShown()
 {
 	TilesShownNum++;
 	// Wait until all tiles are shown (tiles of any type in the TilesToUpdate list)
-	int MaxTiles = OnLevelBegin ? 23 : 10;
+	int MaxTiles = OnLevelBegin ? 24 : 10;
 	UE_LOG(LogTemp, Warning, TEXT("RECEIVE UNIQUE DELEGATE : %d / %d"), TilesShownNum, MaxTiles);
 	if (TilesShownNum != MaxTiles)
 	{
@@ -404,8 +416,6 @@ void USLevelManager::GetGridCoordFromWorldLocation(FIntPoint& TileCoord, const F
 
 void USLevelManager::UpdateGridVisibility()
 {
-	//UE_LOG(LogTemp, Warning, TEXT("UPDATE"));
-
 	auto Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	if (!Player)
 		return;
@@ -434,9 +444,9 @@ void USLevelManager::UpdateGridVisibility()
 		for (size_t idy = 0; idy < CurrentIslandLevel.Grid.Num(); idy++)
 		{
 			FTile& Tile = CurrentIslandLevel.Grid[idx][idy];
-			if (idx == 2 && idy == 2)
+			if (idx == 2 && idy == 2 || Tile.EndRoom)
 			{	
-				// Start Tile always visible (jail)
+				// Start and End Tiles always visible
 				continue;
 			}
 
@@ -446,7 +456,12 @@ void USLevelManager::UpdateGridVisibility()
 			// This is needed if we want to disable some state (for example show vision cone) if enemies are not in the player tile
 			if (ShouldBeVisible)
 			{
-				Tile.SetPlayerTile(CurrentPlayerGridCoord == FIntPoint(idy, idx));
+				bool PlayerTile = CurrentPlayerGridCoord == FIntPoint(idy, idx);
+				Tile.SetPlayerTile(PlayerTile);
+				if (PlayerTile)
+				{
+					Player->GetCharacterMovement()->MaxWalkSpeed = Tile.IsCompleted ? 600.0f : 450.0f;
+				}
 			}
 
 			if (ShouldBeVisible && StreamingLevel->GetShouldBeVisibleFlag())
@@ -474,17 +489,11 @@ void USLevelManager::CompleteRoom(FVector TriggerWorldLocation)
 	FIntPoint gridCoord;
 	GetGridCoordFromWorldLocation(gridCoord, TriggerWorldLocation);
 	FTile& Tile = Islands[CurrentIslandID].Grid[gridCoord.Y][gridCoord.X];
-	Tile.IsCompleted = true;
+	
+	auto Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	Player->GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 
-	for (auto Light : Tile.LevelLights)
-	{
-		Light->TurnOn(true);
-	}
-
-	for (auto Path : Tile.PatrollerPaths) {
-		Path->Patroller->OnRoomComplete();
-		Path->IsAlive = false;
-	}
+	Tile.CompleteRoom();
 }
 
 TArray<ASPatrolPath*> USLevelManager::GetPatrollersFromActorTile(AActor* Actor)
@@ -518,9 +527,6 @@ TArray<AActor*> USLevelManager::GetAllEnemiesFromPlayerTile()
 		ActorsOut.Append(Islands[CurrentIslandID].Grid[CurrentPlayerGridCoord.Y][CurrentPlayerGridCoord.X].Cameras);
 	}
 
-	UE_LOG(LogTemp, Error, TEXT("Actor in Player Tile : %d"), ActorsOut.Num());
-
-
 	return ActorsOut;
 }
 
@@ -541,6 +547,7 @@ void FTile::FillActors(const TArray<ULevelStreaming*>& StreamingLevels)
 	{
 		return Cast<ASPatrolPath>(Actor);
 	});
+	PatrollerPaths.Empty();
 	for (const auto Actor : PatrolPathActors)
 	{
 		auto PatrolPath = Cast<ASPatrolPath>(Actor);
@@ -556,10 +563,11 @@ void FTile::FillActors(const TArray<ULevelStreaming*>& StreamingLevels)
 	{
 		return Cast<ASCamera>(Actor);
 	});
+	Cameras.Empty();
 	for (const auto Actor : CameraActors)
 	{
 		auto Camera = Cast<ASCamera>(Actor);
-		if (Camera)
+		if (IsValid(Camera))
 		{
 			Cameras.Add(Camera);
 		}
@@ -570,6 +578,7 @@ void FTile::FillActors(const TArray<ULevelStreaming*>& StreamingLevels)
 	{
 		return Cast<ASLevelLight>(Actor);
 	});
+	LevelLights.Empty();
 	for (const auto Actor : LevelLightActors)
 	{
 		auto LevelLight = Cast<ASLevelLight>(Actor);
@@ -585,7 +594,7 @@ void FTile::OnTileShown()
 	if (Type != TileType::PT_LEVELROOM)
 		return;
 
-	if (PatrollerPaths.Num() == 0 && LevelLights.Num() == 0)
+	if (PatrollerPaths.Num() == 0 && LevelLights.Num() == 0 && Cameras.Num() == 0)
 	{
 		FirstTimeShown = false;
 		return;
@@ -612,6 +621,11 @@ void FTile::OnTileShown()
 			}
 		}
 		FirstTimeShown = false;
+
+		if (IsCompleted)
+		{
+			CompleteRoom();
+		}
 	}
 	else
 	{
@@ -629,6 +643,11 @@ void FTile::OnTileShown()
 
 void FTile::SetPlayerTile(bool IsPlayerTile)
 {
+	//if (IsCompleted)
+	//{
+	//	return;
+	//}
+
 	for (auto PatrollerPath : PatrollerPaths)
 	{
 		if (IsValid(PatrollerPath) && IsValid(PatrollerPath->Patroller))
@@ -653,3 +672,30 @@ void FTile::SetPlayerTile(bool IsPlayerTile)
 		}
 	}
 }
+
+void FTile::CompleteRoom()
+{
+	IsCompleted = true;
+
+	for (auto Light : LevelLights)
+	{
+		Light->TurnOn(true);
+	}
+
+	for (auto Path : PatrollerPaths) {
+		if (IsValid(Path->Patroller))
+		{
+			Path->IsAlive = false;
+			Path->Patroller->OnRoomComplete();
+		}
+	}
+
+	for (auto Camera : Cameras) {
+		if (IsValid(Camera))
+		{
+			Camera->IsAlive = false;
+			Camera->OnRoomComplete();
+		}
+	}
+}
+

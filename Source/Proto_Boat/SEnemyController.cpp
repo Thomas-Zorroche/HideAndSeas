@@ -70,22 +70,24 @@ void ASEnemyController::OnEnemyComponentChanged()
 
 void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
-	ASTopDownCharacter* Player = nullptr;
-	Player = Cast<ASTopDownCharacter>(Actor);
-	Distraction = Cast<ASSpellDistraction>(Actor);
+	ASTopDownCharacter* Player = Cast<ASTopDownCharacter>(Actor);
+	if (!IsValid(Player))
+	{
+		return;
+	}
 
+	if (Player->DebugMode)
+	{
+		return;
+	}
+	
+	Distraction = Cast<ASSpellDistraction>(Actor);
 	if (Distraction) {
 		if (State == AIState::PATROL || State == AIState::SEARCH) {
 			SetAIState(AIState::DISTRACTED);
 		}
 		return;
 	}
-
-	if (!Player)
-		return;
-
-	UE_LOG(LogTemp, Error, TEXT("STATE: %d"), (uint8)State);
-
 
 	switch (State)
 	{
@@ -116,6 +118,8 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 	case AIState::ALERT:	SetAIState(AIState::SEARCH); break;
 	case AIState::ATTACK:	break;
 	}
+
+	UE_LOG(LogTemp, Error, TEXT("NEW STATE: %d"), (uint8)State);
 }
 
 void ASEnemyController::SetAlertLevel(const float NewAlertLevel) {
@@ -185,14 +189,21 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 	{
 		// DISTANCE ONLY IN XY
 		DistanceToPlayer = FVector::DistSquaredXY(GetPawn()->GetActorLocation(), PlayerCharacter->GetActorLocation());
+		if (DistanceToPlayer > EnemyComp->SightRadius * EnemyComp->SightRadius * 1.25f)
+		{
+			SetAIState(AIState::SEARCH);
+			AlertLevel = 0.0f;
+			return;
+		}
+
 		if (IsValid(EnemyComp))
 		{
-			DistanceToPlayer = DistanceToPlayer / (EnemyComp->SightRadius * EnemyComp->SightRadius);
+			DistanceToPlayer = DistanceToPlayer / (EnemyComp->SightRadius * EnemyComp->SightRadius * 1.1f);
 		}
 		DistanceToPlayer = FMath::Clamp(DistanceToPlayer, 0.0f, 1.0f);
 	}
 
-	float DistanceFactor = FMath::Square(1.0f - FMath::Pow(DistanceToPlayer, 3));
+	float DistanceFactor = 1.0f - FMath::Pow(DistanceToPlayer, 3);
 	
 	if (IsValid(EnemyComp))
 	{
@@ -201,10 +212,6 @@ void ASEnemyController::IncreaseAlertLevel(float DeltaTime)
 	AlertLevel = FMath::Clamp(AlertLevel, 0.0f, 1.0f);
 	
 
-	if (AlertLevel == 0.0f)
-	{
-		SetAIState(AIState::SEARCH);
-	}
 }
 
 void ASEnemyController::DecreaseAlertLevel(float DeltaTime)
@@ -237,7 +244,7 @@ void ASEnemyController::UpdateSightConfig()
 	auto ConfigSight = Cast<UAISenseConfig_Sight>(Config);
 
 	ConfigSight->SightRadius = EnemyComp->SightRadius;
-	ConfigSight->LoseSightRadius = EnemyComp->SightRadius;
+	ConfigSight->LoseSightRadius = EnemyComp->SightRadius * 1.1f;
 	ConfigSight->PeripheralVisionAngleDegrees = EnemyComp->SightAngle;
 
 	AIPerception->RequestStimuliListenerUpdate();
