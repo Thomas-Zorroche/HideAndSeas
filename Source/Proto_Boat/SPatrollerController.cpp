@@ -18,3 +18,9 @@ void ASPatrollerController::GetActorEyesViewPoint(FVector& out_Location, FRotato
 {
     DeterminAISightPerceptionViewPoint(out_Location, out_Rotation);
 }
+
+bool ASPatrollerController::CanBeDistracted()
+{
+	return true;
+}
+

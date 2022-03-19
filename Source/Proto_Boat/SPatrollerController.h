@@ -22,7 +22,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void DeterminAISightPerceptionViewPoint(FVector& out_location, FRotator& out_Rotation) const;
 
-
+	virtual bool CanBeDistracted() override;
 public:
 
 	UPROPERTY(BlueprintReadOnly)

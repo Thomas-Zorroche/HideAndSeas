@@ -27,6 +27,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "SCameraController")
 	void OnReachMaxAngle();
 
+	virtual bool CanBeDistracted() override;
+
+
 protected:
 	UPROPERTY(BlueprintReadWrite)
 	FVector OriginDirection;

@@ -73,16 +73,18 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 	ASTopDownCharacter* Player = Cast<ASTopDownCharacter>(Actor);
 	if (!IsValid(Player))
 	{
-		Distraction = Cast<ASSpellDistraction>(Actor);
-		if (Distraction) 
+		if (CanBeDistracted())
 		{
-			if (State == AIState::PATROL || State == AIState::SEARCH) 
+			Distraction = Cast<ASSpellDistraction>(Actor);
+			if (Distraction) 
 			{
-				SetAIState(AIState::DISTRACTED);
+				if (State == AIState::PATROL || State == AIState::SEARCH)
+				{
+					DistractionLocation = Distraction->GetActorLocation();
+					SetAIState(AIState::DISTRACTED);
+				}
 			}
-			return;
 		}
-
 		return;
 	}
 
@@ -122,6 +124,11 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 	}
 
 	UE_LOG(LogTemp, Error, TEXT("NEW STATE: %d"), (uint8)State);
+}
+
+bool ASEnemyController::CanBeDistracted()
+{
+	return false;
 }
 
 void ASEnemyController::SetAlertLevel(const float NewAlertLevel) {
