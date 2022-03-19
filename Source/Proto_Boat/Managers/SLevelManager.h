@@ -37,6 +37,8 @@ public:
 
 	bool EndRoom = false;
 
+	bool PlayerTile = false;
+
 	TArray<ASPatrolPath*> PatrollerPaths;
 
 	TArray<class ASCamera*> Cameras;
@@ -47,7 +49,7 @@ public:
 
 	void OnTileShown();
 
-	void SetPlayerTile(bool IsPlayerTile);
+	void UpdateActorsPlayerTile();
 
 	void CompleteRoom();
 };

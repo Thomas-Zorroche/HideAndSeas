@@ -390,6 +390,8 @@ void USLevelManager::OnTileShown()
 			Tile->FillActors(GetWorld()->GetStreamingLevels());
 		}
 		Tile->OnTileShown();
+		
+		Tile->UpdateActorsPlayerTile();
 	}
 
 	// Event for grid update
@@ -466,9 +468,9 @@ void USLevelManager::UpdateGridVisibility()
 			// This is needed if we want to disable some state (for example show vision cone) if enemies are not in the player tile
 			if (ShouldBeVisible)
 			{
-				bool PlayerTile = CurrentPlayerGridCoord == FIntPoint(idy, idx);
-				Tile.SetPlayerTile(PlayerTile);
-				if (PlayerTile)
+				bool IsPlayerTile = CurrentPlayerGridCoord == FIntPoint(idy, idx);
+				Tile.PlayerTile = IsPlayerTile;
+				if (IsPlayerTile)
 				{
 					Player->GetCharacterMovement()->MaxWalkSpeed = Tile.IsCompleted ? 600.0f : 450.0f;
 				}
@@ -476,6 +478,7 @@ void USLevelManager::UpdateGridVisibility()
 
 			if (ShouldBeVisible && StreamingLevel->GetShouldBeVisibleFlag())
 			{
+				Tile.UpdateActorsPlayerTile();
 				continue;
 			}
 			else if (ShouldBeVisible)
@@ -658,20 +661,15 @@ void FTile::OnTileShown()
 }
 
 
-void FTile::SetPlayerTile(bool IsPlayerTile)
+void FTile::UpdateActorsPlayerTile()
 {
-	//if (IsCompleted)
-	//{
-	//	return;
-	//}
-
 	for (auto PatrollerPath : PatrollerPaths)
 	{
 		if (IsValid(PatrollerPath) && IsValid(PatrollerPath->Patroller))
 		{
-			if (IsPlayerTile != PatrollerPath->Patroller->InsidePlayerTile)
+			if (PlayerTile != PatrollerPath->Patroller->InsidePlayerTile)
 			{
-				PatrollerPath->Patroller->InsidePlayerTile = IsPlayerTile;
+				PatrollerPath->Patroller->InsidePlayerTile = PlayerTile;
 				PatrollerPath->Patroller->OnPlayerTileChanged();
 			}
 		}
@@ -681,9 +679,9 @@ void FTile::SetPlayerTile(bool IsPlayerTile)
 	{
 		if (IsValid(Camera))
 		{
-			if (IsPlayerTile != Camera->InsidePlayerTile)
+			if (PlayerTile != Camera->InsidePlayerTile)
 			{
-				Camera->InsidePlayerTile = IsPlayerTile;
+				Camera->InsidePlayerTile = PlayerTile;
 				Camera->OnPlayerTileChanged();
 			}
 		}
