@@ -32,5 +32,7 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	bool DebugMode = false;
 
+	UPROPERTY(BlueprintReadWrite)
+	bool InsideTransition = false;
 
 };

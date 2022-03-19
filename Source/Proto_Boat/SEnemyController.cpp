@@ -86,7 +86,7 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 		return;
 	}
 
-	if (Player->DebugMode)
+	if (Player->DebugMode || Player->InsideTransition)
 	{
 		return;
 	}
