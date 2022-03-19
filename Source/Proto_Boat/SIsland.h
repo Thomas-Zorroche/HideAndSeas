@@ -24,6 +24,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "ASIsland")
+	void OnIDReady();
+
 	void SetID(uint8 ID) { IslandID = ID; }
 
 	UFUNCTION(BlueprintCallable)

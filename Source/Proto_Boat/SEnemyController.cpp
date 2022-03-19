@@ -70,22 +70,27 @@ void ASEnemyController::OnEnemyComponentChanged()
 
 void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
-	UE_LOG(LogTemp, Error, TEXT("CONE UPDATE -------------------------------------"));
-
-	ASTopDownCharacter* Player = nullptr;
-	Player = Cast<ASTopDownCharacter>(Actor);
-	Distraction = Cast<ASSpellDistraction>(Actor);
-
-	if (Distraction) {
-		if (State == AIState::PATROL || State == AIState::SEARCH) {
-			SetAIState(AIState::DISTRACTED);
+	ASTopDownCharacter* Player = Cast<ASTopDownCharacter>(Actor);
+	if (!IsValid(Player))
+	{
+		Distraction = Cast<ASSpellDistraction>(Actor);
+		if (Distraction) 
+		{
+			if (State == AIState::PATROL || State == AIState::SEARCH) 
+			{
+				SetAIState(AIState::DISTRACTED);
+			}
+			return;
 		}
+
 		return;
 	}
 
-	if (!Player)
+	if (Player->DebugMode)
+	{
 		return;
-
+	}
+	
 	switch (State)
 	{
 	case AIState::PATROL:

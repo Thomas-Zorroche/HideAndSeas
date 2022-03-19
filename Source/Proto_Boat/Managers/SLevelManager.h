@@ -35,6 +35,8 @@ public:
 	// True first time the level streaming is shown. False after. 
 	bool FirstTimeShown = true;
 
+	bool EndRoom = false;
+
 	TArray<ASPatrolPath*> PatrollerPaths;
 
 	TArray<class ASCamera*> Cameras;
@@ -200,6 +202,7 @@ private:
 	const int TRANSITION_GRID_SIZE = 10 * SCALE_TILE;
 
 	int TilesShownNum = 0;
+	int TilesToShownNum = 0;
 
 	bool OnLevelBegin = true;
 	
