@@ -73,6 +73,16 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 	ASTopDownCharacter* Player = Cast<ASTopDownCharacter>(Actor);
 	if (!IsValid(Player))
 	{
+		Distraction = Cast<ASSpellDistraction>(Actor);
+		if (Distraction) 
+		{
+			if (State == AIState::PATROL || State == AIState::SEARCH) 
+			{
+				SetAIState(AIState::DISTRACTED);
+			}
+			return;
+		}
+
 		return;
 	}
 
@@ -81,14 +91,6 @@ void ASEnemyController::ActorsPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 		return;
 	}
 	
-	Distraction = Cast<ASSpellDistraction>(Actor);
-	if (Distraction) {
-		if (State == AIState::PATROL || State == AIState::SEARCH) {
-			SetAIState(AIState::DISTRACTED);
-		}
-		return;
-	}
-
 	switch (State)
 	{
 	case AIState::PATROL:

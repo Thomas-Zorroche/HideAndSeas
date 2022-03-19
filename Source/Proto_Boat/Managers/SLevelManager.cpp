@@ -308,6 +308,8 @@ void USLevelManager::LoadLevelTiles()
 	FIslandLevel& CurrentIslandLevel = Islands[CurrentIslandID];
 	const TArray<ULevelStreaming*>& StreamedLevels = GetWorld()->GetStreamingLevels();
 	uint8 StreamingLevelID = StreamedLevels.Num();
+	TArray<ULevelStreaming*> StreamingLevelsToShown;
+
 	for (size_t idx = 0; idx < CurrentIslandLevel.Grid.Num(); idx++)
 	{
 		for (size_t idy = 0; idy < CurrentIslandLevel.Grid.Num(); idy++)
@@ -345,9 +347,15 @@ void USLevelManager::LoadLevelTiles()
 			{
 				TilesToUpdate.Add(&Tile);
 				LevelInstance->SetShouldBeVisible(true);
-				LevelInstance->OnLevelShown.AddDynamic(this, &USLevelManager::OnTileShown);
+				StreamingLevelsToShown.Add(LevelInstance);
 			}
 		}
+	}
+
+	TilesToShownNum = StreamingLevelsToShown.Num();
+	for (int i = 0; i < StreamingLevelsToShown.Num(); i++)
+	{
+		StreamingLevelsToShown[i]->OnLevelShown.AddDynamic(this, &USLevelManager::OnTileShown);
 	}
 
 	CurrentIslandLevel.GridLoaded = true;
@@ -358,7 +366,7 @@ void USLevelManager::OnTileShown()
 {
 	TilesShownNum++;
 	// Wait until all tiles are shown (tiles of any type in the TilesToUpdate list)
-	int MaxTiles = OnLevelBegin ? 24 : 10;
+	int MaxTiles = TilesToShownNum;
 	UE_LOG(LogTemp, Warning, TEXT("RECEIVE UNIQUE DELEGATE : %d / %d"), TilesShownNum, MaxTiles);
 	if (TilesShownNum != MaxTiles)
 	{
@@ -405,7 +413,6 @@ void USLevelManager::OnTileShown()
 		}
 	}
 
-
 }
 
 void USLevelManager::GetGridCoordFromWorldLocation(FIntPoint& TileCoord, const FVector& WorldLocation)
@@ -439,12 +446,15 @@ void USLevelManager::UpdateGridVisibility()
 
 	FIslandLevel& CurrentIslandLevel = Islands[CurrentIslandID];
 	const TArray<ULevelStreaming*>& StreamedLevels = GetWorld()->GetStreamingLevels();
+	TArray<ULevelStreaming*> StreamingLevelsToShown;
+
+
 	for (size_t idx = 0; idx < CurrentIslandLevel.Grid.Num(); idx++)
 	{
 		for (size_t idy = 0; idy < CurrentIslandLevel.Grid.Num(); idy++)
 		{
 			FTile& Tile = CurrentIslandLevel.Grid[idx][idy];
-			if (idx == 2 && idy == 2 || Tile.EndRoom)
+			if (idy == 2 && (idx == 0 || idx == 1 || idx == 2) || Tile.EndRoom)
 			{	
 				// Start and End Tiles always visible
 				continue;
@@ -473,7 +483,7 @@ void USLevelManager::UpdateGridVisibility()
 				StreamingLevel->SetShouldBeVisible(true);
 				TilesToUpdate.Add(&Tile);
 				UE_LOG(LogTemp, Warning, TEXT("ADD UNIQUE DELEGATE"));
-				StreamingLevel->OnLevelShown.AddUniqueDynamic(this, &USLevelManager::OnTileShown);
+				StreamingLevelsToShown.Add(StreamingLevel);
 			}
 			else
 			{
@@ -481,6 +491,13 @@ void USLevelManager::UpdateGridVisibility()
 			}
 		}
 	}
+
+	TilesToShownNum = StreamingLevelsToShown.Num();
+	for (int i = 0; i < StreamingLevelsToShown.Num(); i++)
+	{
+		StreamingLevelsToShown[i]->OnLevelShown.AddUniqueDynamic(this, &USLevelManager::OnTileShown);
+	}
+
 }
 
 
