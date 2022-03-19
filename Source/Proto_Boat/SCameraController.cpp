@@ -38,3 +38,8 @@ void ASCameraController::InitializeDirection(const FVector& Dir)
 	OriginDirection = Dir;
 	CurrentDirection = Dir;
 }
+
+bool ASCameraController::CanBeDistracted()
+{
+	return false;
+}

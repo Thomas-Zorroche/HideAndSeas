@@ -42,8 +42,6 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
 	void OnDebugStateLabelChanged(const FString& debugStateLabel);
 
-
-
 	UFUNCTION(BlueprintImplementableEvent, Category = "SEnemyController")
 	void OnAttack();
 
@@ -74,6 +72,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnPlayerHideEnd();
 
+	virtual bool CanBeDistracted();
+
 private:
 	UFUNCTION(BlueprintCallable)
 	void SetAIState(AIState NewState);
@@ -89,6 +89,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ASSpellDistraction* Distraction;
+
+	UPROPERTY(BlueprintReadOnly)
+	FVector DistractionLocation;
+
 
 	// State of the enemy
 	UPROPERTY(BlueprintReadOnly)
