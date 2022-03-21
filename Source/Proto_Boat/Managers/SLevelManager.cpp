@@ -450,6 +450,7 @@ void USLevelManager::UpdateGridVisibility()
 	const TArray<ULevelStreaming*>& StreamedLevels = GetWorld()->GetStreamingLevels();
 	TArray<ULevelStreaming*> StreamingLevelsToShown;
 
+	Player->GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 
 	for (size_t idx = 0; idx < CurrentIslandLevel.Grid.Num(); idx++)
 	{
