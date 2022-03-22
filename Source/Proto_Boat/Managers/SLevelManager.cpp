@@ -691,6 +691,11 @@ void FTile::UpdateActorsPlayerTile()
 
 void FTile::CompleteRoom()
 {
+	if (IsCompleted)
+	{
+		return;
+	}
+
 	IsCompleted = true;
 
 	for (auto Light : LevelLights)
