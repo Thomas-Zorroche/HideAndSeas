@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/SphereComponent.h" 
 
 #include "SIsland.generated.h"
 
@@ -25,7 +24,18 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "ASIsland")
+	void OnIDReady();
+
+	void SetID(uint8 ID) { IslandID = ID; }
+
+	UFUNCTION(BlueprintCallable)
+	uint8 GetID() const { return IslandID; }
+
+	UPROPERTY(BlueprintReadWrite)
+	FTransform ExitTransform;
+
 private:
-	UPROPERTY(EditAnywhere)
-	USphereComponent* SphereCollision;
+	// ID of Island inside GameManager.Islands
+	uint8 IslandID;
 };

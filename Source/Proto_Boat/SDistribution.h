@@ -22,7 +22,9 @@ struct FActorToSpawnData
 	int MinDistance;
 };
 
-
+/*
+* Spawn Actors inside Box with the help of some data OR generate random data
+*/
 UCLASS()
 class PROTO_BOAT_API ASDistribution : public AActor
 {
@@ -34,10 +36,16 @@ public:
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& e) override;
-#endif
-	
+
 	UFUNCTION(CallInEditor, Category="SDistribution")
-	void Update();
+	void UpdateEditor();
+#endif
+
+	UFUNCTION(BlueprintCallable, Category="SDistribution")
+	void GenerateActorsFromGameManager();
+	
+	UFUNCTION(BlueprintCallable, Category="SDistribution")
+	TArray<class ASIsland*> GenerateActorsRandomly();
 
 protected:
 	// Called when the game starts or when spawned
@@ -46,8 +54,20 @@ protected:
 private:
 	virtual void Destroyed() override;
 
-	void SpawnActors(FActorToSpawnData ActorData);
+	void Reset();
 
+	void GenerateAllActors(TArray<class ASIsland*>& Islands);    // All actors
+	void GenerateIslands(const TArray<struct  FIslandLevel>& IslandLevels);	     // Only Island Actors
+	void GenerateOthersActors(); // Only actors that are not Island
+
+	TArray<AActor*> SpawnActorsRandomly(const FActorToSpawnData& ActorData);
+	AActor* SpawnActor(const FTransform& SpawnLocation, TSubclassOf<AActor> Class);
+
+	bool GenerateRandomCoordinatesInsideBox(FVector& Location, const FActorToSpawnData& ActorData);
+
+public:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> IslandClass;
 
 private:
 	UBoxComponent* Box;
